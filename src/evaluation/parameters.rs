@@ -1,14 +1,5 @@
 use crate::position::num_square_symmetries;
 
-pub const NUM_VALUE_FEATURES_4S: usize = 51;
-pub const NUM_POLICY_FEATURES_4S: usize = 130;
-
-pub const NUM_VALUE_FEATURES_5S: usize = 69;
-pub const NUM_POLICY_FEATURES_5S: usize = 149;
-
-pub const NUM_VALUE_FEATURES_6S: usize = 72;
-pub const NUM_POLICY_FEATURES_6S: usize = 159;
-
 #[derive(Debug)]
 pub struct ValueFeatures<'a> {
     pub flat_psqt: &'a mut [f32],
@@ -238,26 +229,23 @@ impl<'a> PolicyFeatures<'a> {
     }
 }
 
-pub fn num_value_features<const S: usize>() -> usize {
-    match S {
-        4 => NUM_VALUE_FEATURES_4S,
-        5 => NUM_VALUE_FEATURES_5S,
-        6 => NUM_VALUE_FEATURES_6S,
-        _ => unimplemented!(),
-    }
+pub const fn num_value_features<const S: usize>() -> usize {
+    num_square_symmetries::<S>() * 5 + (S + 1) * 3 + 6 * 1 + 3 * 3 + 1 * 6
 }
 
-pub fn num_policy_features<const S: usize>() -> usize {
-    match S {
-        4 => NUM_POLICY_FEATURES_4S,
-        5 => NUM_POLICY_FEATURES_5S,
-        6 => NUM_POLICY_FEATURES_6S,
-        _ => unimplemented!(),
-    }
+pub const fn num_policy_features<const S: usize>() -> usize {
+    num_square_symmetries::<S>() * 3
+        + (S * 3) * 2
+        + (S - 3) * 4
+        + 6 * 3
+        + 4 * 2
+        + 3 * 16
+        + 2 * 3
+        + 1 * 13
 }
 
 #[allow(clippy::unreadable_literal)]
-pub const VALUE_PARAMS_4S: [f32; NUM_VALUE_FEATURES_4S] = [
+pub const VALUE_PARAMS_4S: [f32; num_value_features::<4>()] = [
     0.40710354,
     0.54004306,
     0.7314182,
@@ -311,7 +299,7 @@ pub const VALUE_PARAMS_4S: [f32; NUM_VALUE_FEATURES_4S] = [
     0.003347816,
 ];
 #[allow(clippy::unreadable_literal)]
-pub const POLICY_PARAMS_4S: [f32; NUM_POLICY_FEATURES_4S] = [
+pub const POLICY_PARAMS_4S: [f32; num_policy_features::<4>()] = [
     -1.9638666,
     0.65362936,
     0.75938225,
@@ -445,7 +433,7 @@ pub const POLICY_PARAMS_4S: [f32; NUM_POLICY_FEATURES_4S] = [
 ];
 
 #[allow(clippy::unreadable_literal)]
-pub const VALUE_PARAMS_5S: [f32; NUM_VALUE_FEATURES_5S] = [
+pub const VALUE_PARAMS_5S: [f32; num_value_features::<5>()] = [
     -0.00044795033,
     0.15347332,
     0.14927012,
@@ -518,7 +506,7 @@ pub const VALUE_PARAMS_5S: [f32; NUM_VALUE_FEATURES_5S] = [
 ];
 
 #[allow(clippy::unreadable_literal)]
-pub const POLICY_PARAMS_5S: [f32; NUM_POLICY_FEATURES_5S] = [
+pub const POLICY_PARAMS_5S: [f32; num_policy_features::<5>()] = [
     -2.017089,
     1.0088558,
     0.38969103,
@@ -671,7 +659,7 @@ pub const POLICY_PARAMS_5S: [f32; NUM_POLICY_FEATURES_5S] = [
 ];
 
 #[allow(clippy::unreadable_literal)]
-pub const VALUE_PARAMS_6S: [f32; NUM_VALUE_FEATURES_6S] = [
+pub const VALUE_PARAMS_6S: [f32; num_value_features::<6>()] = [
     0.046171084,
     0.18331811,
     0.22388674,
@@ -747,7 +735,7 @@ pub const VALUE_PARAMS_6S: [f32; NUM_VALUE_FEATURES_6S] = [
 ];
 
 #[allow(clippy::unreadable_literal)]
-pub const POLICY_PARAMS_6S: [f32; NUM_POLICY_FEATURES_6S] = [
+pub const POLICY_PARAMS_6S: [f32; num_policy_features::<6>()] = [
     -2.5363762,
     1.2830093,
     -0.056601353,

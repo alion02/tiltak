@@ -896,3 +896,9 @@ pub const POLICY_PARAMS_6S: [f32; num_policy_features::<6>()] = [
     1.2117652,
     3.4018445,
 ];
+
+#[allow(clippy::unreadable_literal)]
+pub const VALUE_PARAMS_7S: [f32; num_value_features::<7>()] = [0.; num_value_features::<7>()];
+
+#[allow(clippy::unreadable_literal)]
+pub const POLICY_PARAMS_7S: [f32; num_policy_features::<7>()] = [0.; num_policy_features::<7>()];

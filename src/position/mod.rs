@@ -27,8 +27,8 @@ pub use utils::{
 pub use mv::{Move, ReverseMove};
 
 use crate::evaluation::parameters::{
-    ValueFeatures, POLICY_PARAMS_4S, POLICY_PARAMS_5S, POLICY_PARAMS_6S, VALUE_PARAMS_4S,
-    VALUE_PARAMS_5S, VALUE_PARAMS_6S,
+    ValueFeatures, POLICY_PARAMS_4S, POLICY_PARAMS_5S, POLICY_PARAMS_6S, POLICY_PARAMS_7S,
+    VALUE_PARAMS_4S, VALUE_PARAMS_5S, VALUE_PARAMS_6S, VALUE_PARAMS_7S,
 };
 use crate::evaluation::value_eval;
 use crate::position::color_trait::ColorTr;
@@ -780,6 +780,7 @@ impl<const S: usize> Position<S> {
             4 => &VALUE_PARAMS_4S,
             5 => &VALUE_PARAMS_5S,
             6 => &VALUE_PARAMS_6S,
+            7 => &VALUE_PARAMS_7S,
             _ => unimplemented!("{}s is not supported.", S),
         }
     }
@@ -789,6 +790,7 @@ impl<const S: usize> Position<S> {
             4 => &POLICY_PARAMS_4S,
             5 => &POLICY_PARAMS_5S,
             6 => &POLICY_PARAMS_6S,
+            7 => &POLICY_PARAMS_7S,
             _ => unimplemented!("{}s is not supported.", S),
         }
     }

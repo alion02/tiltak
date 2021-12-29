@@ -74,12 +74,8 @@ pub const fn starting_capstones<const S: usize>() -> u8 {
 }
 
 pub(crate) const fn num_square_symmetries<const S: usize>() -> usize {
-    match S {
-        4 => 3,
-        5 => 6,
-        6 => 6,
-        _ => 0,
-    }
+    let triangle_size = (S + 1) / 2;
+    (triangle_size + 1) * triangle_size / 2
 }
 
 pub(crate) const fn square_symmetries<const S: usize>() -> &'static [usize] {

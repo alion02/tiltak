@@ -20,7 +20,7 @@ fn main() {
                 .help("Board size")
                 .takes_value(true)
                 .default_value("5")
-                .possible_values(&["4", "5", "6"]),
+                .possible_values(&["4", "5", "6", "7"]),
         )
         .subcommand(SubCommand::with_name("selfplay")
             .about("Tune value and policy constants by playing against itself. Will write the games to text files in the working directory."))

@@ -196,6 +196,7 @@ fn play_game_pair<const S: usize>(
     last_params_wins: &AtomicU64,
     i: usize,
 ) -> (Game<Position<S>>, Vec<Vec<(Move, f32)>>) {
+    println!("Starting game {}", i);
     let settings = MctsSetting::default()
         .add_value_params(value_params.to_vec())
         .add_policy_params(policy_params.to_vec())

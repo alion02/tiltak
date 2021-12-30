@@ -299,8 +299,6 @@ pub fn tune_value_from_file<const S: usize, const N: usize>(
 
     let tuned_parameters = gradient_descent::gradient_descent(&samples, &initial_params, 100.0);
 
-    println!("Final parameters: {:?}", tuned_parameters);
-
     Ok(tuned_parameters)
 }
 

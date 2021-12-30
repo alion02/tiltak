@@ -58,7 +58,7 @@ pub fn gradient_descent<const N: usize>(
             // println!("New parameters: {:?}", parameter_set);
 
             let error = average_error(samples, &parameter_set);
-            println!("Error now {}, eta={}\n", error, eta);
+            println!("Error now {}, eta={}", error, eta);
 
             if error < lowest_error {
                 iterations_since_improvement = 0;

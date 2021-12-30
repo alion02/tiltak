@@ -480,6 +480,54 @@ pub(crate) struct AbstractBoard<T, const S: usize> {
     pub(crate) raw: [[T; S]; S],
 }
 
+impl<T: Copy, const S: usize> AbstractBoard<T, S> {
+    pub fn flip_board_y(&self) -> Self {
+        let mut new_board = self.clone();
+        for x in 0..S as u8 {
+            for y in 0..S as u8 {
+                new_board[Square(y * S as u8 + x)] = self[Square((S as u8 - y - 1) * S as u8 + x)];
+            }
+        }
+        new_board
+    }
+
+    pub fn flip_board_x(&self) -> Self {
+        let mut new_board = self.clone();
+        for x in 0..S as u8 {
+            for y in 0..S as u8 {
+                new_board[Square(y * S as u8 + x)] = self[Square(y * S as u8 + (S as u8 - x - 1))];
+            }
+        }
+        new_board
+    }
+
+    pub fn rotate_board(&self) -> Self {
+        let mut new_board = self.clone();
+        for x in 0..S as u8 {
+            for y in 0..S as u8 {
+                let new_x = y;
+                let new_y = S as u8 - x - 1;
+                new_board[Square(y * S as u8 + x)] = self[Square(new_y * S as u8 + new_x)];
+            }
+        }
+        new_board
+    }
+
+    /// Returns all 8 symmetries of the board
+    pub fn symmetries(&self) -> Vec<Self> {
+        vec![
+            self.clone(),
+            self.flip_board_x(),
+            self.flip_board_y(),
+            self.rotate_board(),
+            self.rotate_board().rotate_board(),
+            self.rotate_board().rotate_board().rotate_board(),
+            self.rotate_board().flip_board_x(),
+            self.rotate_board().flip_board_y(),
+        ]
+    }
+}
+
 impl<T: Default + Copy, const S: usize> Default for AbstractBoard<T, S> {
     fn default() -> Self {
         AbstractBoard {

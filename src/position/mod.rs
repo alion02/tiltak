@@ -497,35 +497,24 @@ impl<const S: usize> Position<S> {
     }
 
     pub fn flip_board_y(&self) -> Position<S> {
-        let mut new_board = self.clone();
-        for x in 0..S as u8 {
-            for y in 0..S as u8 {
-                new_board[Square(y * S as u8 + x)] = self[Square((S as u8 - y - 1) * S as u8 + x)];
-            }
+        Position {
+            cells: self.cells.flip_board_y(),
+            ..self.clone()
         }
-        new_board
     }
 
     pub fn flip_board_x(&self) -> Position<S> {
-        let mut new_board = self.clone();
-        for x in 0..S as u8 {
-            for y in 0..S as u8 {
-                new_board[Square(y * S as u8 + x)] = self[Square(y * S as u8 + (S as u8 - x - 1))];
-            }
+        Position {
+            cells: self.cells.flip_board_x(),
+            ..self.clone()
         }
-        new_board
     }
 
     pub fn rotate_board(&self) -> Position<S> {
-        let mut new_board = self.clone();
-        for x in 0..S as u8 {
-            for y in 0..S as u8 {
-                let new_x = y;
-                let new_y = S as u8 - x - 1;
-                new_board[Square(y * S as u8 + x)] = self[Square(new_y * S as u8 + new_x)];
-            }
+        Position {
+            cells: self.cells.rotate_board(),
+            ..self.clone()
         }
-        new_board
     }
 
     pub fn flip_colors(&self) -> Position<S> {
@@ -550,16 +539,14 @@ impl<const S: usize> Position<S> {
 
     /// Returns all 8 symmetries of the board
     pub fn symmetries(&self) -> Vec<Position<S>> {
-        vec![
-            self.clone(),
-            self.flip_board_x(),
-            self.flip_board_y(),
-            self.rotate_board(),
-            self.rotate_board().rotate_board(),
-            self.rotate_board().rotate_board().rotate_board(),
-            self.rotate_board().flip_board_x(),
-            self.rotate_board().flip_board_y(),
-        ]
+        self.cells
+            .symmetries()
+            .into_iter()
+            .map(|cells| Position {
+                cells,
+                ..self.clone()
+            })
+            .collect()
     }
 
     /// Returns all 16 symmetries of the board, where swapping the colors is also a symmetry

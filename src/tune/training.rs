@@ -381,12 +381,15 @@ pub fn tune_value_and_policy<const S: usize, const N: usize, const M: usize>(
     }
 
     let tuned_value_parameters =
-        gradient_descent::gradient_descent(&value_training_samples, initial_value_params, 100.0);
+        gradient_descent::gradient_descent(&value_training_samples, initial_value_params, 1000.0);
 
     println!("Final parameters: {:?}", tuned_value_parameters);
 
-    let tuned_policy_parameters =
-        gradient_descent::gradient_descent(&policy_training_samples, initial_policy_params, 5000.0);
+    let tuned_policy_parameters = gradient_descent::gradient_descent(
+        &policy_training_samples,
+        initial_policy_params,
+        50000.0,
+    );
 
     println!("Final parameters: {:?}", tuned_policy_parameters);
 

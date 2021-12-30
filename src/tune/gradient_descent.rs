@@ -55,7 +55,7 @@ pub fn gradient_descent<const N: usize>(
                 .iter_mut()
                 .zip(gradients.iter())
                 .for_each(|(param, gradient)| *param -= gradient * eta);
-            println!("New parameters: {:?}", parameter_set);
+            // println!("New parameters: {:?}", parameter_set);
 
             let error = average_error(samples, &parameter_set);
             println!("Error now {}, eta={}\n", error, eta);

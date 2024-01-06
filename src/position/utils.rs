@@ -26,11 +26,51 @@ impl Square {
     }
 
     pub const fn rank<const S: usize>(self) -> u8 {
-        self.0 % S as u8
+        if S == 6 {
+            const RANKS: [[u8; 6]; 6] = {
+                let mut ranks = [[0; 6]; 6];
+                let mut file = 0;
+                while file < 6 {
+                    let mut rank = 0;
+                    while rank < 6 {
+                        ranks[file][rank] = rank as u8;
+                        rank += 1;
+                    }
+                    file += 1;
+                }
+
+                ranks
+            };
+
+            debug_assert!((self.0 as usize) < 6 * 6);
+            unsafe { (RANKS.as_ptr() as *const u8).add(self.0 as usize).read() }
+        } else {
+            self.0 % S as u8
+        }
     }
 
     pub const fn file<const S: usize>(self) -> u8 {
-        self.0 / S as u8
+        if S == 6 {
+            const FILES: [[u8; 6]; 6] = {
+                let mut files = [[0; 6]; 6];
+                let mut file = 0;
+                while file < 6 {
+                    let mut rank = 0;
+                    while rank < 6 {
+                        files[file][rank] = file as u8;
+                        rank += 1;
+                    }
+                    file += 1;
+                }
+
+                files
+            };
+
+            debug_assert!((self.0 as usize) < 6 * 6);
+            unsafe { (FILES.as_ptr() as *const u8).add(self.0 as usize).read() }
+        } else {
+            self.0 / S as u8
+        }
     }
 
     pub fn neighbours<const S: usize>(self) -> impl Iterator<Item = Square> {

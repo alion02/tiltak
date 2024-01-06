@@ -35,50 +35,50 @@ impl Square {
 
     pub fn neighbours<const S: usize>(self) -> impl Iterator<Item = Square> {
         (if self.rank::<S>() == 0 && self.file::<S>() == 0 {
-            [(S as i8), 1].iter()
+            &[(S as i8), 1][..]
         } else if self.rank::<S>() == 0 && self.file::<S>() == S as u8 - 1 {
-            [-(S as i8), 1].iter()
+            &[-(S as i8), 1][..]
         } else if self.rank::<S>() == S as u8 - 1 && self.file::<S>() == 0 {
-            [(S as i8), -1].iter()
+            &[(S as i8), -1][..]
         } else if self.rank::<S>() == S as u8 - 1 && self.file::<S>() == S as u8 - 1 {
-            [-(S as i8), -1].iter()
+            &[-(S as i8), -1][..]
         } else if self.rank::<S>() == 0 {
-            [-(S as i8), (S as i8), 1].iter()
+            &[-(S as i8), (S as i8), 1][..]
         } else if self.rank::<S>() == S as u8 - 1 {
-            [-1, -(S as i8), (S as i8)].iter()
+            &[-1, -(S as i8), (S as i8)][..]
         } else if self.file::<S>() == 0 {
-            [-1, (S as i8), 1].iter()
+            &[-1, (S as i8), 1][..]
         } else if self.file::<S>() == S as u8 - 1 {
-            [-1, -(S as i8), 1].iter()
+            &[-1, -(S as i8), 1][..]
         } else {
-            [-1, -(S as i8), (S as i8), 1].iter()
+            &[-1, -(S as i8), (S as i8), 1][..]
         })
-        .cloned()
-        .map(move |sq| sq + self.0 as i8)
-        .map(|sq| Square(sq as u8))
+        .iter()
+        .map(move |sq| Square((sq + self.0 as i8) as u8))
     }
 
     pub fn directions<const S: usize>(self) -> impl Iterator<Item = Direction> {
         (if self.rank::<S>() == 0 && self.file::<S>() == 0 {
-            [East, South].iter()
+            &[East, South][..]
         } else if self.rank::<S>() == 0 && self.file::<S>() == S as u8 - 1 {
-            [West, South].iter()
+            &[West, South][..]
         } else if self.rank::<S>() == S as u8 - 1 && self.file::<S>() == 0 {
-            [East, North].iter()
+            &[East, North][..]
         } else if self.rank::<S>() == S as u8 - 1 && self.file::<S>() == S as u8 - 1 {
-            [West, North].iter()
+            &[West, North][..]
         } else if self.rank::<S>() == 0 {
-            [West, East, South].iter()
+            &[West, East, South][..]
         } else if self.rank::<S>() == S as u8 - 1 {
-            [North, West, East].iter()
+            &[North, West, East][..]
         } else if self.file::<S>() == 0 {
-            [North, East, South].iter()
+            &[North, East, South][..]
         } else if self.file::<S>() == S as u8 - 1 {
-            [North, West, South].iter()
+            &[North, West, South][..]
         } else {
-            [North, West, East, South].iter()
+            &[North, West, East, South][..]
         })
-        .cloned()
+        .iter()
+        .copied()
     }
 
     pub const fn go_direction<const S: usize>(self, direction: Direction) -> Option<Self> {

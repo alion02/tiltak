@@ -5,6 +5,19 @@ use std::{
 
 use crate::position::{num_line_symmetries, num_square_symmetries, Komi};
 
+macro_rules! access {
+    ($name:ident, $const:expr, $s:expr, $sq:expr, $ln:expr) => {
+        #[inline]
+        pub fn $name(&mut self, index: usize) -> &mut f32 {
+            &mut self.raw[index
+                + $const
+                + $s * S
+                + $sq * num_square_symmetries::<S>()
+                + $ln * S * num_line_symmetries::<S>()]
+        }
+    };
+}
+
 pub const NUM_VALUE_FEATURES_4S: usize = 254;
 pub const NUM_POLICY_FEATURES_4S: usize = 176;
 
@@ -73,127 +86,35 @@ impl<'a, const S: usize> ValueFeatures<'a, S> {
             },
         }
     }
-    #[inline]
-    pub fn first_ply(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[index]
-    }
-    #[inline]
-    pub fn second_ply(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[1 + index]
-    }
-    #[inline]
-    pub fn flat_psqt(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[1 + num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn wall_psqt(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[1 + 2 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn cap_psqt(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[1 + 3 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn supports_psqt(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[1 + 4 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn captives_psqt(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[1 + 5 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn shallow_supports_per_piece(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[1 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn deep_supports_per_piece(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[5 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn shallow_captives_per_piece(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[9 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn deep_captives_per_piece(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[13 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn us_to_move_opening_flatstone_lead(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[17 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn them_to_move_opening_flatstone_lead(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[24 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn us_to_move_middlegame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[31 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn them_to_move_middlegame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[38 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn us_to_move_endgame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[45 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn them_to_move_endgame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[52 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn i_number_of_groups(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[59 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn critical_squares(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[62 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn flat_next_to_our_stack(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[68 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn wall_next_to_our_stack(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[69 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn cap_next_to_our_stack(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[70 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn num_lines_occupied(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[71 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn line_control_empty(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw[S + 72 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn line_control_their_blocking_piece(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw
-            [S * num_line_symmetries::<S>() + S + 72 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn line_control_other(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw
-            [2 * S * num_line_symmetries::<S>() + S + 72 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn sidelined_cap(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw
-            [3 * S * num_line_symmetries::<S>() + S + 72 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn fully_isolated_cap(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw
-            [3 * S * num_line_symmetries::<S>() + S + 75 + 6 * num_square_symmetries::<S>() + index]
-    }
-    #[inline]
-    pub fn semi_isolated_cap(&mut self, index: usize) -> &mut f32 {
-        &mut self.raw
-            [3 * S * num_line_symmetries::<S>() + S + 78 + 6 * num_square_symmetries::<S>() + index]
-    }
+    access!(first_ply, 0, 0, 0, 0);
+    access!(second_ply, 1, 0, 0, 0);
+    access!(flat_psqt, 1, 0, 1, 0);
+    access!(wall_psqt, 1, 0, 2, 0);
+    access!(cap_psqt, 1, 0, 3, 0);
+    access!(supports_psqt, 1, 0, 4, 0);
+    access!(captives_psqt, 1, 0, 5, 0);
+    access!(shallow_supports_per_piece, 1, 0, 6, 0);
+    access!(deep_supports_per_piece, 5, 0, 6, 0);
+    access!(shallow_captives_per_piece, 9, 0, 6, 0);
+    access!(deep_captives_per_piece, 13, 0, 6, 0);
+    access!(us_to_move_opening_flatstone_lead, 17, 0, 6, 0);
+    access!(them_to_move_opening_flatstone_lead, 24, 0, 6, 0);
+    access!(us_to_move_middlegame_flatstone_lead, 31, 0, 6, 0);
+    access!(them_to_move_middlegame_flatstone_lead, 38, 0, 6, 0);
+    access!(us_to_move_endgame_flatstone_lead, 45, 0, 6, 0);
+    access!(them_to_move_endgame_flatstone_lead, 52, 0, 6, 0);
+    access!(i_number_of_groups, 59, 0, 6, 0);
+    access!(critical_squares, 62, 0, 6, 0);
+    access!(flat_next_to_our_stack, 68, 0, 6, 0);
+    access!(wall_next_to_our_stack, 69, 0, 6, 0);
+    access!(cap_next_to_our_stack, 70, 0, 6, 0);
+    access!(num_lines_occupied, 71, 0, 6, 0);
+    access!(line_control_empty, 72, 1, 6, 0);
+    access!(line_control_their_blocking_piece, 72, 1, 6, 1);
+    access!(line_control_other, 72, 1, 6, 2);
+    access!(sidelined_cap, 72, 1, 6, 3);
+    access!(fully_isolated_cap, 75, 1, 6, 3);
+    access!(semi_isolated_cap, 78, 1, 6, 3);
 }
 
 #[derive(Debug)]

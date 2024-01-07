@@ -118,201 +118,78 @@ impl<'a, const S: usize> ValueFeatures<'a, S> {
 }
 
 #[derive(Debug)]
-pub struct PolicyFeatures<'a> {
-    pub flat_psqt_white: ThinSlice<'a>,
-    pub flat_psqt_black: ThinSlice<'a>,
-    pub wall_psqt_white: ThinSlice<'a>,
-    pub wall_psqt_black: ThinSlice<'a>,
-    pub cap_psqt_white: ThinSlice<'a>,
-    pub cap_psqt_black: ThinSlice<'a>,
-    pub move_role_bonus_white: ThinSlice<'a>,
-    pub move_role_bonus_black: ThinSlice<'a>,
-    pub decline_win: ThinSlice<'a>,
-    pub place_to_win: ThinSlice<'a>,
-    pub place_to_draw: ThinSlice<'a>,
-    pub place_to_loss: ThinSlice<'a>,
-    pub place_to_allow_opponent_to_end: ThinSlice<'a>,
-    pub two_flats_left: ThinSlice<'a>,
-    pub three_flats_left: ThinSlice<'a>,
-    pub our_road_stones_in_line: ThinSlice<'a>,
-    pub their_road_stones_in_line: ThinSlice<'a>,
-    pub extend_single_group_base: ThinSlice<'a>,
-    pub extend_single_group_linear: ThinSlice<'a>,
-    pub extend_single_group_to_new_line_base: ThinSlice<'a>,
-    pub extend_single_group_to_new_line_linear: ThinSlice<'a>,
-    pub merge_two_groups_base: ThinSlice<'a>,
-    pub merge_two_groups_linear: ThinSlice<'a>,
-    pub block_merger_base: ThinSlice<'a>,
-    pub block_merger_linear: ThinSlice<'a>,
-    pub place_our_critical_square: ThinSlice<'a>,
-    pub place_their_critical_square: ThinSlice<'a>,
-    pub ignore_their_critical_square: ThinSlice<'a>,
-    pub next_to_our_last_stone: ThinSlice<'a>,
-    pub next_to_their_last_stone: ThinSlice<'a>,
-    pub diagonal_to_our_last_stone: ThinSlice<'a>,
-    pub diagonal_to_their_last_stone: ThinSlice<'a>,
-    pub attack_strong_flats: ThinSlice<'a>,
-    pub blocking_stone_blocks_extensions_of_two_flats: ThinSlice<'a>,
-    pub attack_strong_stack_with_wall: ThinSlice<'a>,
-    pub attack_strong_stack_with_cap: ThinSlice<'a>,
-    pub attack_last_movement: ThinSlice<'a>,
-    pub place_last_movement: ThinSlice<'a>,
-    pub simple_movement: ThinSlice<'a>,
-    pub simple_capture: ThinSlice<'a>,
-    pub simple_self_capture: ThinSlice<'a>,
-    pub pure_spread: ThinSlice<'a>,
-    pub fcd_highest_board: ThinSlice<'a>,
-    pub fcd_highest_stack: ThinSlice<'a>,
-    pub fcd_other: ThinSlice<'a>,
-    pub stack_captured_by_movement: ThinSlice<'a>,
-    pub stack_capture_in_strong_line: ThinSlice<'a>,
-    pub stack_capture_in_strong_line_cap: ThinSlice<'a>,
-    pub move_cap_onto_strong_line: ThinSlice<'a>,
-    pub move_cap_onto_strong_line_with_critical_square: ThinSlice<'a>,
-    pub recapture_stack_pure: ThinSlice<'a>,
-    pub recapture_stack_impure: ThinSlice<'a>,
-    pub move_last_placement: ThinSlice<'a>,
-    pub continue_spread: ThinSlice<'a>,
-    pub move_onto_critical_square: ThinSlice<'a>,
-    pub spread_that_connects_groups_to_win: ThinSlice<'a>,
-    pub padding: ThinSlice<'a>,
+pub struct PolicyFeatures<'a, const S: usize> {
+    raw: ThinSlice<'a>,
 }
 
-impl<'a> PolicyFeatures<'a> {
-    pub fn new<const S: usize>(coefficients: &'a mut [f32]) -> PolicyFeatures<'a> {
+impl<'a, const S: usize> PolicyFeatures<'a, S> {
+    pub fn new(coefficients: &'a mut [f32]) -> Self {
         assert_eq!(coefficients.len(), num_policy_features::<S>());
 
-        let (flat_psqt_white, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (flat_psqt_black, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (wall_psqt_white, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (wall_psqt_black, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (cap_psqt_white, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (cap_psqt_black, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (move_role_bonus_white, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (move_role_bonus_black, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (decline_win, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (place_to_win, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (place_to_draw, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (place_to_loss, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (place_to_allow_opponent_to_end, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (two_flats_left, coefficients) = split_at_mut_thin(coefficients, 2);
-        let (three_flats_left, coefficients) = split_at_mut_thin(coefficients, 2);
-        let (our_road_stones_in_line, coefficients) = split_at_mut_thin(coefficients, S * 3);
-        let (their_road_stones_in_line, coefficients) = split_at_mut_thin(coefficients, S * 3);
-        let (extend_single_group_to_new_line_base, coefficients) =
-            split_at_mut_thin(coefficients, 3);
-        let (extend_single_group_to_new_line_linear, coefficients) =
-            split_at_mut_thin(coefficients, 3);
-        let (extend_single_group_base, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (extend_single_group_linear, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (merge_two_groups_base, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (merge_two_groups_linear, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (block_merger_base, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (block_merger_linear, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (place_our_critical_square, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (place_their_critical_square, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (ignore_their_critical_square, coefficients) = split_at_mut_thin(coefficients, 2);
-        let (next_to_our_last_stone, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (next_to_their_last_stone, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (diagonal_to_our_last_stone, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (diagonal_to_their_last_stone, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (attack_strong_flats, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (blocking_stone_blocks_extensions_of_two_flats, coefficients) =
-            split_at_mut_thin(coefficients, 1);
-        let (attack_strong_stack_with_wall, coefficients) = split_at_mut_thin(coefficients, 6);
-        let (attack_strong_stack_with_cap, coefficients) = split_at_mut_thin(coefficients, 6);
-        let (attack_last_movement, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (place_last_movement, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (simple_movement, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (simple_capture, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (simple_self_capture, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (pure_spread, coefficients) = split_at_mut_thin(coefficients, 2);
-        let (fcd_highest_board, coefficients) = split_at_mut_thin(coefficients, 6);
-        let (fcd_highest_stack, coefficients) = split_at_mut_thin(coefficients, 6);
-        let (fcd_other, coefficients) = split_at_mut_thin(coefficients, 8);
-        let (stack_captured_by_movement, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (stack_capture_in_strong_line, coefficients) = split_at_mut_thin(coefficients, S - 3);
-        let (stack_capture_in_strong_line_cap, coefficients) =
-            split_at_mut_thin(coefficients, S - 3);
-        let (move_cap_onto_strong_line, coefficients) = split_at_mut_thin(coefficients, S - 3);
-        let (move_cap_onto_strong_line_with_critical_square, coefficients) =
-            split_at_mut_thin(coefficients, S - 3);
-        let (recapture_stack_pure, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (recapture_stack_impure, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (move_last_placement, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (continue_spread, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (move_onto_critical_square, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (spread_that_connects_groups_to_win, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (padding, coefficients) = split_at_mut_thin(coefficients, policy_padding::<S>());
-
-        assert!(coefficients.is_empty());
-
         PolicyFeatures {
-            flat_psqt_white,
-            flat_psqt_black,
-            wall_psqt_white,
-            wall_psqt_black,
-            cap_psqt_white,
-            cap_psqt_black,
-            move_role_bonus_white,
-            move_role_bonus_black,
-            decline_win,
-            place_to_win,
-            place_to_draw,
-            place_to_loss,
-            place_to_allow_opponent_to_end,
-            two_flats_left,
-            three_flats_left,
-            our_road_stones_in_line,
-            their_road_stones_in_line,
-            extend_single_group_base,
-            extend_single_group_linear,
-            extend_single_group_to_new_line_base,
-            extend_single_group_to_new_line_linear,
-            merge_two_groups_base,
-            merge_two_groups_linear,
-            block_merger_base,
-            block_merger_linear,
-            place_our_critical_square,
-            place_their_critical_square,
-            ignore_their_critical_square,
-            next_to_our_last_stone,
-            next_to_their_last_stone,
-            diagonal_to_our_last_stone,
-            diagonal_to_their_last_stone,
-            attack_strong_flats,
-            blocking_stone_blocks_extensions_of_two_flats,
-            attack_strong_stack_with_wall,
-            attack_strong_stack_with_cap,
-            attack_last_movement,
-            place_last_movement,
-            simple_movement,
-            simple_capture,
-            simple_self_capture,
-            pure_spread,
-            fcd_highest_board,
-            fcd_highest_stack,
-            fcd_other,
-            stack_captured_by_movement,
-            stack_capture_in_strong_line,
-            stack_capture_in_strong_line_cap,
-            move_cap_onto_strong_line,
-            move_cap_onto_strong_line_with_critical_square,
-            recapture_stack_pure,
-            recapture_stack_impure,
-            move_last_placement,
-            continue_spread,
-            move_onto_critical_square,
-            spread_that_connects_groups_to_win,
-            padding,
+            raw: ThinSlice {
+                ptr: coefficients.as_mut_ptr(),
+                phantom_data: PhantomData,
+            },
         }
     }
+    access!(flat_psqt_white, 0, 0, 0, 0);
+    access!(flat_psqt_black, 0, 0, 1, 0);
+    access!(wall_psqt_white, 0, 0, 2, 0);
+    access!(wall_psqt_black, 0, 0, 3, 0);
+    access!(cap_psqt_white, 0, 0, 4, 0);
+    access!(cap_psqt_black, 0, 0, 5, 0);
+    access!(move_role_bonus_white, 0, 0, 6, 0);
+    access!(move_role_bonus_black, 3, 0, 6, 0);
+    access!(decline_win, 6, 0, 6, 0);
+    access!(place_to_win, 7, 0, 6, 0);
+    access!(place_to_draw, 8, 0, 6, 0);
+    access!(place_to_loss, 9, 0, 6, 0);
+    access!(place_to_allow_opponent_to_end, 10, 0, 6, 0);
+    access!(two_flats_left, 13, 0, 6, 0);
+    access!(three_flats_left, 15, 0, 6, 0);
+    access!(our_road_stones_in_line, 17, 0, 6, 0);
+    access!(their_road_stones_in_line, 17, 3, 6, 0);
+    access!(extend_single_group_base, 17, 6, 6, 0);
+    access!(extend_single_group_linear, 20, 6, 6, 0);
+    access!(extend_single_group_to_new_line_base, 23, 6, 6, 0);
+    access!(extend_single_group_to_new_line_linear, 26, 6, 6, 0);
+    access!(merge_two_groups_base, 29, 6, 6, 0);
+    access!(merge_two_groups_linear, 32, 6, 6, 0);
+    access!(block_merger_base, 35, 6, 6, 0);
+    access!(block_merger_linear, 38, 6, 6, 0);
+    access!(place_our_critical_square, 41, 6, 6, 0);
+    access!(place_their_critical_square, 42, 6, 6, 0);
+    access!(ignore_their_critical_square, 46, 6, 6, 0);
+    access!(next_to_our_last_stone, 48, 6, 6, 0);
+    access!(next_to_their_last_stone, 49, 6, 6, 0);
+    access!(diagonal_to_our_last_stone, 50, 6, 6, 0);
+    access!(diagonal_to_their_last_stone, 51, 6, 6, 0);
+    access!(attack_strong_flats, 52, 6, 6, 0);
+    access!(blocking_stone_blocks_extensions_of_two_flats, 53, 6, 6, 0);
+    access!(attack_strong_stack_with_wall, 54, 6, 6, 0);
+    access!(attack_strong_stack_with_cap, 60, 6, 6, 0);
+    access!(attack_last_movement, 66, 6, 6, 0);
+    access!(place_last_movement, 70, 6, 6, 0);
+    access!(simple_movement, 73, 6, 6, 0);
+    access!(simple_capture, 76, 6, 6, 0);
+    access!(simple_self_capture, 80, 6, 6, 0);
+    access!(pure_spread, 84, 6, 6, 0);
+    access!(fcd_highest_board, 86, 6, 6, 0);
+    access!(fcd_highest_stack, 92, 6, 6, 0);
+    access!(fcd_other, 98, 6, 6, 0);
+    access!(stack_captured_by_movement, 106, 6, 6, 0);
+    access!(stack_capture_in_strong_line, 107, 6, 6, 0);
+    access!(stack_capture_in_strong_line_cap, 104, 7, 6, 0);
+    access!(move_cap_onto_strong_line, 101, 8, 6, 0);
+    access!(move_cap_onto_strong_line_with_critical_square, 98, 9, 6, 0);
+    access!(recapture_stack_pure, 95, 10, 6, 0);
+    access!(recapture_stack_impure, 98, 10, 6, 0);
+    access!(move_last_placement, 101, 10, 6, 0);
+    access!(continue_spread, 104, 10, 6, 0);
+    access!(move_onto_critical_square, 107, 10, 6, 0);
+    access!(spread_that_connects_groups_to_win, 110, 10, 6, 0);
+    access!(padding, 111, 10, 6, 0);
 }
 
 pub fn num_value_features<const S: usize>() -> usize {

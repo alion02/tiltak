@@ -36,7 +36,7 @@ impl<const S: usize> Position<S> {
         fcd_per_move: &mut Vec<i8>,
         moves: &mut Vec<(Move, search::Score)>,
         feature_sets: &mut Vec<Box<[f32]>>,
-        policy_feature_sets: &mut Option<Vec<PolicyFeatures<'static>>>,
+        policy_feature_sets: &mut Option<Vec<PolicyFeatures<'static, S>>>,
     ) {
         let num_moves = simple_moves.len();
 
@@ -48,7 +48,7 @@ impl<const S: usize> Position<S> {
             // Ugly performance hack. `policy_feature_sets` is empty,
             // but creating another vec from `into_iter::collect()` re-uses the memory,
             // even though the new vector has a different type
-            let mut converted: Vec<PolicyFeatures<'_>> = policy_feature_sets
+            let mut converted: Vec<PolicyFeatures<S>> = policy_feature_sets
                 .take()
                 .unwrap()
                 .into_iter()
@@ -58,7 +58,7 @@ impl<const S: usize> Position<S> {
             converted.extend(
                 feature_sets[..num_moves]
                     .iter_mut()
-                    .map(|feature_set| PolicyFeatures::new::<S>(feature_set)),
+                    .map(|feature_set| PolicyFeatures::new(feature_set)),
             );
 
             self.features_for_moves(&mut converted, simple_moves, fcd_per_move, group_data);
@@ -106,7 +106,7 @@ impl<const S: usize> Position<S> {
 
     pub fn features_for_moves(
         &self,
-        feature_sets: &mut [PolicyFeatures],
+        feature_sets: &mut [PolicyFeatures<S>],
         moves: &[Move],
         fcd_per_move: &mut Vec<i8>,
         group_data: &GroupData<S>,
@@ -137,11 +137,11 @@ impl<const S: usize> Position<S> {
             // FCD bonus for all movements
             if let Move::Move(square, _, _) = mv {
                 if fcd >= highest_fcd {
-                    features_set.fcd_highest_board[fcd.clamp(1, 6) as usize - 1] = 1.0;
+                    *features_set.fcd_highest_board(fcd.clamp(1, 6) as usize - 1) = 1.0;
                 } else if fcd >= highest_fcd_per_square[*square] {
-                    features_set.fcd_highest_stack[(fcd.clamp(-1, 4) + 1) as usize] = 1.0;
+                    *features_set.fcd_highest_stack((fcd.clamp(-1, 4) + 1) as usize) = 1.0;
                 } else {
-                    features_set.fcd_other[(fcd.clamp(-3, 4) + 3) as usize] = 1.0;
+                    *features_set.fcd_other((fcd.clamp(-3, 4) + 3) as usize) = 1.0;
                 }
             }
 
@@ -152,7 +152,7 @@ impl<const S: usize> Position<S> {
         if immediate_win_exists {
             for features_set in feature_sets.iter_mut().take(moves.len()) {
                 if !has_immediate_win(features_set) {
-                    features_set.decline_win[0] = 1.0;
+                    *features_set.decline_win(0) = 1.0;
                 }
             }
         }
@@ -160,7 +160,7 @@ impl<const S: usize> Position<S> {
 
     fn features_for_move(
         &self,
-        policy_features: &mut PolicyFeatures,
+        policy_features: &mut PolicyFeatures<S>,
         mv: &Move,
         fcd: i8,
         group_data: &GroupData<S>,
@@ -184,13 +184,13 @@ impl<const S: usize> Position<S> {
     }
 }
 
-fn has_immediate_win(policy_features: &PolicyFeatures) -> bool {
+fn has_immediate_win<const S: usize>(policy_features: &mut PolicyFeatures<S>) -> bool {
     [
-        policy_features.place_to_win[0],
-        policy_features.place_our_critical_square[0],
-        policy_features.move_onto_critical_square[0],
-        policy_features.move_onto_critical_square[1],
-        policy_features.spread_that_connects_groups_to_win[0],
+        *policy_features.place_to_win(0),
+        *policy_features.place_our_critical_square(0),
+        *policy_features.move_onto_critical_square(0),
+        *policy_features.move_onto_critical_square(1),
+        *policy_features.spread_that_connects_groups_to_win(0),
     ]
     .iter()
     .any(|p| *p != 0.0)
@@ -249,7 +249,7 @@ fn get_movement_in_history<const S: usize>(
 
 fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
     position: &Position<S>,
-    policy_features: &mut PolicyFeatures,
+    policy_features: &mut PolicyFeatures<S>,
     mv: &Move,
     fcd: i8,
     group_data: &GroupData<S>,
@@ -292,11 +292,11 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             }
             // TODO: These two bonuses don't take komi into account, but they should
             else if Us::stones_left(position) == 2 && Us::caps_left(position) == 0 {
-                policy_features.two_flats_left[0] = 1.0;
-                policy_features.two_flats_left[1] = our_flat_lead_after_move as f32;
+                *policy_features.two_flats_left(0) = 1.0;
+                *policy_features.two_flats_left(1) = our_flat_lead_after_move as f32;
             } else if Us::stones_left(position) == 3 && Us::caps_left(position) == 0 {
-                policy_features.three_flats_left[0] = 1.0;
-                policy_features.three_flats_left[1] = our_flat_lead_after_move as f32;
+                *policy_features.three_flats_left(0) = 1.0;
+                *policy_features.three_flats_left(1) = our_flat_lead_after_move as f32;
             }
 
             let their_open_critical_squares =
@@ -305,22 +305,22 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             // Apply PSQT
             match (role, position.side_to_move()) {
                 (Flat, Color::White) => {
-                    policy_features.flat_psqt_white[lookup_square_symmetries::<S>(*square)] = 1.0
+                    *policy_features.flat_psqt_white(lookup_square_symmetries::<S>(*square)) = 1.0
                 }
                 (Flat, Color::Black) => {
-                    policy_features.flat_psqt_black[lookup_square_symmetries::<S>(*square)] = 1.0
+                    *policy_features.flat_psqt_black(lookup_square_symmetries::<S>(*square)) = 1.0
                 }
                 (Wall, Color::White) => {
-                    policy_features.wall_psqt_white[lookup_square_symmetries::<S>(*square)] = 1.0
+                    *policy_features.wall_psqt_white(lookup_square_symmetries::<S>(*square)) = 1.0
                 }
                 (Wall, Color::Black) => {
-                    policy_features.wall_psqt_black[lookup_square_symmetries::<S>(*square)] = 1.0
+                    *policy_features.wall_psqt_black(lookup_square_symmetries::<S>(*square)) = 1.0
                 }
                 (Cap, Color::White) => {
-                    policy_features.cap_psqt_white[lookup_square_symmetries::<S>(*square)] = 1.0
+                    *policy_features.cap_psqt_white(lookup_square_symmetries::<S>(*square)) = 1.0
                 }
                 (Cap, Color::Black) => {
-                    policy_features.cap_psqt_black[lookup_square_symmetries::<S>(*square)] = 1.0
+                    *policy_features.cap_psqt_black(lookup_square_symmetries::<S>(*square)) = 1.0
                 }
             }
 
@@ -333,10 +333,10 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             for &line in BitBoard::lines_for_square::<S>(*square).iter() {
                 let our_line_score = (Us::road_stones(group_data) & line).count();
                 let their_line_score = (Them::road_stones(group_data) & line).count();
-                policy_features.our_road_stones_in_line[S * role_id + our_line_score as usize] +=
+                *policy_features.our_road_stones_in_line(S * role_id + our_line_score as usize) +=
                     1.0;
-                policy_features.their_road_stones_in_line
-                    [S * role_id + their_line_score as usize] += 1.0;
+                *policy_features
+                    .their_road_stones_in_line(S * role_id + their_line_score as usize) += 1.0;
             }
 
             // If square is next to a group
@@ -368,9 +368,9 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                     .map(|(_, group_id)| group_data.amount_in_group[*group_id as usize].0 as f32)
                     .sum();
 
-                policy_features.merge_two_groups_base[role_id] = 1.0;
+                *policy_features.merge_two_groups_base(role_id) = 1.0;
                 // Divide by 10, as large values confuse the tuner
-                policy_features.merge_two_groups_linear[role_id] =
+                *policy_features.merge_two_groups_linear(role_id) =
                     total_neighbours_group_size / 10.0;
             }
 
@@ -380,17 +380,17 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                     .map(|(_, group_id)| group_data.amount_in_group[*group_id as usize].0 as f32)
                     .sum();
 
-                policy_features.block_merger_base[role_id] = 1.0;
+                *policy_features.block_merger_base(role_id) = 1.0;
                 // Divide by 10, as large values confuse the tuner
-                policy_features.block_merger_linear[role_id] = total_neighbours_group_size / 10.0;
+                *policy_features.block_merger_linear(role_id) = total_neighbours_group_size / 10.0;
             }
             if our_unique_neighbour_groups.len() == 1 {
                 let group_id = our_unique_neighbour_groups[0].1;
                 let amount_in_group = group_data.amount_in_group[group_id as usize].0 as f32;
 
-                policy_features.extend_single_group_base[role_id] = 1.0;
+                *policy_features.extend_single_group_base(role_id) = 1.0;
                 // Divide by 10, as large values confuse the tuner
-                policy_features.extend_single_group_linear[role_id] = amount_in_group / 10.0;
+                *policy_features.extend_single_group_linear(role_id) = amount_in_group / 10.0;
 
                 // Apply a separate bonus if the piece expands the group to a new line
                 if squares_iterator::<S>()
@@ -400,20 +400,20 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                         .filter(|sq| group_data.groups[*sq] == group_id)
                         .all(|sq| sq.rank::<S>() != square.rank::<S>())
                 {
-                    policy_features.extend_single_group_to_new_line_base[role_id] = 1.0;
-                    policy_features.extend_single_group_to_new_line_linear[role_id] =
+                    *policy_features.extend_single_group_to_new_line_base(role_id) = 1.0;
+                    *policy_features.extend_single_group_to_new_line_linear(role_id) =
                         amount_in_group / 10.0;
                 }
             }
 
             if *role == Flat || *role == Cap {
                 if Us::is_critical_square(group_data, *square) {
-                    policy_features.place_our_critical_square[0] += 1.0;
+                    *policy_features.place_our_critical_square(0) += 1.0;
                 } else if !their_open_critical_squares.is_empty() {
                     if their_open_critical_squares == BitBoard::empty().set(square.0) {
-                        policy_features.place_their_critical_square[0] += 1.0;
+                        *policy_features.place_their_critical_square(0) += 1.0;
                     } else {
-                        policy_features.ignore_their_critical_square[0] += 1.0;
+                        *policy_features.ignore_their_critical_square(0) += 1.0;
                     }
                 }
 
@@ -421,12 +421,12 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                 if let Some((last_role, last_square)) = our_last_placement(position) {
                     if last_role == Flat || last_role == Cap {
                         if square.neighbours::<S>().any(|neigh| neigh == last_square) {
-                            policy_features.next_to_our_last_stone[0] = 1.0;
+                            *policy_features.next_to_our_last_stone(0) = 1.0;
                         } else if (square.rank::<S>() as i8 - last_square.rank::<S>() as i8).abs()
                             == 1
                             && (square.file::<S>() as i8 - last_square.file::<S>() as i8).abs() == 1
                         {
-                            policy_features.diagonal_to_our_last_stone[0] = 1.0;
+                            *policy_features.diagonal_to_our_last_stone(0) = 1.0;
                         }
                     }
                 }
@@ -435,12 +435,12 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                 if let Some((last_role, last_square)) = their_last_placement(position) {
                     if last_role == Flat {
                         if square.neighbours::<S>().any(|neigh| neigh == last_square) {
-                            policy_features.next_to_their_last_stone[0] = 1.0;
+                            *policy_features.next_to_their_last_stone(0) = 1.0;
                         } else if (square.rank::<S>() as i8 - last_square.rank::<S>() as i8).abs()
                             == 1
                             && (square.file::<S>() as i8 - last_square.file::<S>() as i8).abs() == 1
                         {
-                            policy_features.diagonal_to_their_last_stone[0] = 1.0;
+                            *policy_features.diagonal_to_their_last_stone(0) = 1.0;
                         }
                     }
                 }
@@ -455,7 +455,7 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                                 .file::<S>(neighbour.file::<S>())
                                 .count();
                         if our_road_stones >= 2 {
-                            policy_features.attack_strong_flats[0] += (our_road_stones - 1) as f32;
+                            *policy_features.attack_strong_flats(0) += (our_road_stones - 1) as f32;
                         }
                     }
                 }
@@ -464,19 +464,19 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             if *role == Wall {
                 if !their_open_critical_squares.is_empty() {
                     if their_open_critical_squares == BitBoard::empty().set(square.0) {
-                        policy_features.place_their_critical_square[1] += 1.0;
+                        *policy_features.place_their_critical_square(1) += 1.0;
                     } else {
-                        policy_features.ignore_their_critical_square[0] += 1.0;
+                        *policy_features.ignore_their_critical_square(0) += 1.0;
                     }
                 }
             } else if *role == Cap {
                 if Us::is_critical_square(group_data, *square) {
-                    policy_features.place_our_critical_square[0] += 1.0;
+                    *policy_features.place_our_critical_square(0) += 1.0;
                 } else if !their_open_critical_squares.is_empty() {
                     if their_open_critical_squares == BitBoard::empty().set(square.0) {
-                        policy_features.place_their_critical_square[2] += 1.0;
+                        *policy_features.place_their_critical_square(2) += 1.0;
                     } else {
-                        policy_features.ignore_their_critical_square[0] += 1.0;
+                        *policy_features.ignore_their_critical_square(0) += 1.0;
                     }
                 }
             }
@@ -495,7 +495,7 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                             .map(Them::is_road_stone)
                             .unwrap_or_default()
                     {
-                        policy_features.blocking_stone_blocks_extensions_of_two_flats[0] += 1.0;
+                        *policy_features.blocking_stone_blocks_extensions_of_two_flats(0) += 1.0;
                     }
 
                     if position[neighbour].len() > 2
@@ -516,15 +516,15 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                         match role {
                             Flat => unreachable!(),
                             Wall => {
-                                policy_features.attack_strong_stack_with_wall[index] +=
+                                *policy_features.attack_strong_stack_with_wall(index) +=
                                     captives as f32;
-                                policy_features.attack_strong_stack_with_wall[index + 1] +=
+                                *policy_features.attack_strong_stack_with_wall(index + 1) +=
                                     reserves as f32;
                             }
                             Cap => {
-                                policy_features.attack_strong_stack_with_cap[index] +=
+                                *policy_features.attack_strong_stack_with_cap(index) +=
                                     captives as f32;
-                                policy_features.attack_strong_stack_with_cap[index + 1] +=
+                                *policy_features.attack_strong_stack_with_cap(index + 1) +=
                                     reserves as f32;
                             }
                         }
@@ -535,8 +535,8 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                         }) = their_last_movement(position)
                         {
                             if neighbour == destination {
-                                policy_features.attack_last_movement[0] += captives as f32;
-                                policy_features.attack_last_movement[1] += reserves as f32;
+                                *policy_features.attack_last_movement(0) += captives as f32;
+                                *policy_features.attack_last_movement(1) += reserves as f32;
                             }
                         }
                     }
@@ -550,7 +550,7 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             }) = their_last_movement(position)
             {
                 if *square == origin {
-                    policy_features.place_last_movement[role_id] += 1.0;
+                    *policy_features.place_last_movement(role_id) += 1.0;
                 }
             }
         }
@@ -562,8 +562,8 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                 Cap => 2,
             };
             match position.side_to_move() {
-                Color::White => policy_features.move_role_bonus_white[role_id] += 1.0,
-                Color::Black => policy_features.move_role_bonus_black[role_id] += 1.0,
+                Color::White => *policy_features.move_role_bonus_white(role_id) += 1.0,
+                Color::Black => *policy_features.move_role_bonus_black(role_id) += 1.0,
             }
 
             if stack_movement.len() == 1
@@ -574,14 +574,14 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                     position[square.go_direction::<S>(*direction).unwrap()].top_stone()
                 {
                     match (piece.role(), piece.color() == Us::color()) {
-                        (Flat, true) => policy_features.simple_self_capture[role_id] = 1.0,
-                        (Flat, false) => policy_features.simple_capture[role_id] = 1.0,
-                        (Wall, true) => policy_features.simple_self_capture[3] = 1.0,
-                        (Wall, false) => policy_features.simple_capture[3] = 1.0,
+                        (Flat, true) => *policy_features.simple_self_capture(role_id) = 1.0,
+                        (Flat, false) => *policy_features.simple_capture(role_id) = 1.0,
+                        (Wall, true) => *policy_features.simple_self_capture(3) = 1.0,
+                        (Wall, false) => *policy_features.simple_capture(3) = 1.0,
                         _ => unreachable!(),
                     }
                 } else {
-                    policy_features.simple_movement[role_id] = 1.0;
+                    *policy_features.simple_movement(role_id) = 1.0;
                 }
             }
 
@@ -595,7 +595,7 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             // Bonus for moving the piece we placed on our last turn
             if let Some((role, last_square)) = our_last_placement(position) {
                 if *square == last_square && !position[destination_square].is_empty() {
-                    policy_features.move_last_placement[role.disc()] += 1.0;
+                    *policy_features.move_last_placement(role.disc()) += 1.0;
                 }
             }
 
@@ -726,13 +726,14 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                         };
                     let road_piece_count = destination_line.count() as usize;
                     if road_piece_count > 2 {
-                        policy_features.move_cap_onto_strong_line[road_piece_count - 3] += 1.0;
+                        *policy_features.move_cap_onto_strong_line(road_piece_count - 3) += 1.0;
                         if destination_square
                             .neighbours::<S>()
                             .any(|n| Us::is_critical_square(group_data, n))
                         {
-                            policy_features.move_cap_onto_strong_line_with_critical_square
-                                [road_piece_count - 3] += 1.0;
+                            *policy_features.move_cap_onto_strong_line_with_critical_square(
+                                road_piece_count - 3,
+                            ) += 1.0;
                         }
                     }
                 }
@@ -742,11 +743,11 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                     // whether it's captured by us or them
                     if piece.color() != destination_top_stone.color() {
                         if Us::piece_is_ours(piece) {
-                            policy_features.stack_captured_by_movement[0] +=
+                            *policy_features.stack_captured_by_movement(0) +=
                                 destination_stack.len() as f32;
                             their_pieces_captured += 1;
                         } else {
-                            policy_features.stack_captured_by_movement[0] -=
+                            *policy_features.stack_captured_by_movement(0) -=
                                 destination_stack.len() as f32;
                             our_squares_affected.push(destination_square);
 
@@ -771,12 +772,12 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                         let color_factor = if Us::piece_is_ours(piece) { 1.0 } else { -1.0 };
                         if our_road_stones > 2 {
                             if piece.role() == Cap {
-                                policy_features.stack_capture_in_strong_line_cap
-                                    [our_road_stones - 3] +=
+                                *policy_features
+                                    .stack_capture_in_strong_line_cap(our_road_stones - 3) +=
                                     color_factor * destination_stack.len() as f32;
                             } else {
-                                policy_features.stack_capture_in_strong_line
-                                    [our_road_stones - 3] +=
+                                *policy_features
+                                    .stack_capture_in_strong_line(our_road_stones - 3) +=
                                     color_factor * destination_stack.len() as f32;
                             }
                         }
@@ -810,9 +811,9 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             }
 
             if their_pieces == 0 {
-                policy_features.pure_spread[0] = 1.0;
+                *policy_features.pure_spread(0) = 1.0;
             } else {
-                policy_features.pure_spread[1] = 1.0;
+                *policy_features.pure_spread(1) = 1.0;
             }
 
             // Continue spreading the stack (the piece, that is) we spread last turn, if any
@@ -822,16 +823,16 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             }) = our_last_movement(position)
             {
                 if destination == *square {
-                    policy_features.continue_spread[role_id] = 1.0;
+                    *policy_features.continue_spread(role_id) = 1.0;
                 }
             }
 
             // Recapture the stack they moved on their last move
             if let Some(role) = stack_recaptured_with {
                 if their_pieces == 0 {
-                    policy_features.recapture_stack_pure[role as u16 as usize] = 1.0;
+                    *policy_features.recapture_stack_pure(role as u16 as usize) = 1.0;
                 } else {
-                    policy_features.recapture_stack_impure[role as u16 as usize] = 1.0;
+                    *policy_features.recapture_stack_impure(role as u16 as usize) = 1.0;
                 }
             }
 
@@ -841,10 +842,10 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             if !their_open_critical_squares.is_empty() {
                 if their_pieces_captured == 0 && captures_their_critical_square.is_none() {
                     // Move ignores their critical threat, but might win for us
-                    policy_features.ignore_their_critical_square[1] += 1.0;
+                    *policy_features.ignore_their_critical_square(1) += 1.0;
                 } else {
                     // Move captures at least one stack, which might save us
-                    policy_features.place_their_critical_square[3] += their_pieces_captured as f32;
+                    *policy_features.place_their_critical_square(3) += their_pieces_captured as f32;
                 }
             }
 
@@ -864,7 +865,7 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                         && (*direction == North || *direction == South)
                 {
                     // Only this option is a guaranteed win:
-                    policy_features.move_onto_critical_square[0] += 1.0;
+                    *policy_features.move_onto_critical_square(0) += 1.0;
                 } else {
                     // Check if reaching the critical square still wins, in case our
                     // stack spread lost some of our flats
@@ -884,7 +885,7 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
 
                     if edge_connection.is_winning() {
                         // Only this option is a guaranteed win:
-                        policy_features.move_onto_critical_square[0] += 1.0;
+                        *policy_features.move_onto_critical_square(0) += 1.0;
                     }
                     // If the critical square has two neighbours of the same group,
                     // and neither the origin square nor the critical square is a wall,
@@ -902,9 +903,9 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
                             > 1
                         && position[critical_square].top_stone().map(Piece::role) != Some(Wall)
                     {
-                        policy_features.move_onto_critical_square[1] += 1.0
+                        *policy_features.move_onto_critical_square(1) += 1.0
                     } else {
-                        policy_features.move_onto_critical_square[2] += 1.0
+                        *policy_features.move_onto_critical_square(2) += 1.0
                     }
                 }
             }
@@ -917,7 +918,7 @@ fn features_for_move_colortr<Us: ColorTr, Them: ColorTr, const S: usize>(
             }
 
             if group_edge_connection.is_winning() {
-                policy_features.spread_that_connects_groups_to_win[0] = 1.0;
+                *policy_features.spread_that_connects_groups_to_win(0) = 1.0;
             }
         }
     }
@@ -927,25 +928,25 @@ fn check_flat_win_next_move<Us: ColorTr, const S: usize>(
     position: &Position<S>,
     our_flatcount_after_move: i8,
     their_flatcount: i8,
-    policy_features: &mut PolicyFeatures<'_>,
+    policy_features: &mut PolicyFeatures<S>,
 ) {
     if Us::color() == Color::White {
         match position
             .komi()
             .game_result_with_flatcounts(our_flatcount_after_move, their_flatcount + 1)
         {
-            GameResult::WhiteWin => policy_features.place_to_allow_opponent_to_end[2] = 1.0,
-            GameResult::BlackWin => policy_features.place_to_allow_opponent_to_end[0] = 1.0,
-            GameResult::Draw => policy_features.place_to_allow_opponent_to_end[1] = 1.0,
+            GameResult::WhiteWin => *policy_features.place_to_allow_opponent_to_end(2) = 1.0,
+            GameResult::BlackWin => *policy_features.place_to_allow_opponent_to_end(0) = 1.0,
+            GameResult::Draw => *policy_features.place_to_allow_opponent_to_end(1) = 1.0,
         }
     } else {
         match position
             .komi()
             .game_result_with_flatcounts(their_flatcount + 1, our_flatcount_after_move)
         {
-            GameResult::WhiteWin => policy_features.place_to_allow_opponent_to_end[0] = 1.0,
-            GameResult::BlackWin => policy_features.place_to_allow_opponent_to_end[2] = 1.0,
-            GameResult::Draw => policy_features.place_to_allow_opponent_to_end[1] = 1.0,
+            GameResult::WhiteWin => *policy_features.place_to_allow_opponent_to_end(0) = 1.0,
+            GameResult::BlackWin => *policy_features.place_to_allow_opponent_to_end(2) = 1.0,
+            GameResult::Draw => *policy_features.place_to_allow_opponent_to_end(1) = 1.0,
         }
     }
 }
@@ -954,25 +955,25 @@ fn check_flat_win<Us: ColorTr, const S: usize>(
     position: &Position<S>,
     our_flatcount_after_move: i8,
     their_flatcount: i8,
-    policy_features: &mut PolicyFeatures<'_>,
+    policy_features: &mut PolicyFeatures<S>,
 ) {
     if Us::color() == Color::White {
         match position
             .komi()
             .game_result_with_flatcounts(our_flatcount_after_move, their_flatcount)
         {
-            GameResult::WhiteWin => policy_features.place_to_win[0] = 1.0,
-            GameResult::BlackWin => policy_features.place_to_loss[0] = 1.0,
-            GameResult::Draw => policy_features.place_to_draw[0] = 1.0,
+            GameResult::WhiteWin => *policy_features.place_to_win(0) = 1.0,
+            GameResult::BlackWin => *policy_features.place_to_loss(0) = 1.0,
+            GameResult::Draw => *policy_features.place_to_draw(0) = 1.0,
         }
     } else {
         match position
             .komi()
             .game_result_with_flatcounts(their_flatcount, our_flatcount_after_move)
         {
-            GameResult::WhiteWin => policy_features.place_to_loss[0] = 1.0,
-            GameResult::BlackWin => policy_features.place_to_win[0] = 1.0,
-            GameResult::Draw => policy_features.place_to_draw[0] = 1.0,
+            GameResult::WhiteWin => *policy_features.place_to_loss(0) = 1.0,
+            GameResult::BlackWin => *policy_features.place_to_win(0) = 1.0,
+            GameResult::Draw => *policy_features.place_to_draw(0) = 1.0,
         }
     }
 }

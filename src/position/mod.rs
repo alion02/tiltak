@@ -1061,7 +1061,7 @@ impl<const S: usize> Position<S> {
         moves: &mut Vec<(<Self as PositionTrait>::Move, f32)>,
         fcd_per_move: &mut Vec<i8>,
         features: &mut Vec<Box<[f32]>>,
-        policy_feature_sets: &mut Option<Vec<PolicyFeatures<'static>>>,
+        policy_feature_sets: &mut Option<Vec<PolicyFeatures<'static, S>>>,
     ) {
         debug_assert!(simple_moves.is_empty());
         self.generate_moves(simple_moves);
@@ -1102,7 +1102,7 @@ impl<const S: usize> Position<S> {
         fcd_per_move: &mut Vec<i8>,
         features: &mut Vec<Box<[f32]>>,
         policy_params: &[f32],
-        policy_feature_sets: &mut Option<Vec<PolicyFeatures<'static>>>,
+        policy_feature_sets: &mut Option<Vec<PolicyFeatures<'static, S>>>,
     ) {
         self.generate_moves_with_params(
             policy_params,

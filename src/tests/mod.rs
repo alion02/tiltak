@@ -125,16 +125,16 @@ impl TestPosition {
         position.generate_moves(&mut moves);
 
         let mut feature_sets = vec![vec![0.0; parameters::num_policy_features::<S>()]; moves.len()];
-        let mut policy_feature_sets: Vec<PolicyFeatures> = feature_sets
+        let mut policy_feature_sets: Vec<PolicyFeatures<S>> = feature_sets
             .iter_mut()
-            .map(|feature_set| PolicyFeatures::new::<S>(feature_set))
+            .map(|feature_set| PolicyFeatures::new(feature_set))
             .collect();
 
         position.features_for_moves(&mut policy_feature_sets, &moves, &mut vec![], &group_data);
 
         policy_feature_sets
             .iter()
-            .any(|features| features.decline_win[0] != 0.0)
+            .any(|features| *features.decline_win(0) != 0.0)
     }
 }
 

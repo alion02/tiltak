@@ -141,7 +141,7 @@ pub struct MonteCarloTree<const S: usize> {
     position: Position<S>,
     temp_position: Position<S>,
     settings: MctsSetting<S>,
-    temp_vectors: TempVectors,
+    temp_vectors: TempVectors<S>,
     arena: Arena,
 }
 
@@ -159,7 +159,7 @@ impl<const S: usize> MonteCarloTree<S> {
             }
             Err(err) => panic!("{}", err),
         };
-        let mut temp_vectors = TempVectors::new::<S>();
+        let mut temp_vectors = TempVectors::new();
         let mut root_edge = TreeEdge {
             child: None,
             mv: Move::Place(Role::Flat, Square::default()),

@@ -398,7 +398,7 @@ fn print_value_features<const S: usize>(komi: Komi) {
 fn print_policy_features<const S: usize>(komi: Komi) {
     let mut params = <Position<S>>::policy_params(komi).to_vec();
 
-    let policy_features = parameters::PolicyFeatures::new::<S>(&mut params);
+    let policy_features = parameters::PolicyFeatures::<S>::new(&mut params);
     let policy_features_string = format!("{:?}", policy_features);
 
     println!("White features:");
@@ -531,7 +531,7 @@ fn analyze_position<const S: usize>(position: &Position<S>) {
     let mut feature_sets = vec![vec![0.0; parameters::num_policy_features::<S>()]; moves.len()];
     let mut policy_feature_sets: Vec<_> = feature_sets
         .iter_mut()
-        .map(|feature_set| parameters::PolicyFeatures::new::<S>(feature_set))
+        .map(|feature_set| parameters::PolicyFeatures::<S>::new(feature_set))
         .collect();
 
     let simple_moves: Vec<Move> = moves.iter().map(|(mv, _)| mv.clone()).collect();

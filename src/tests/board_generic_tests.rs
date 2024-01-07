@@ -85,9 +85,9 @@ fn play_random_games_prop<const S: usize>(num_games: usize) {
 
             let mut feature_sets =
                 vec![vec![0.0; parameters::num_policy_features::<S>()]; moves.len()];
-            let mut policy_feature_sets: Vec<PolicyFeatures> = feature_sets
+            let mut policy_feature_sets: Vec<PolicyFeatures<S>> = feature_sets
                 .iter_mut()
-                .map(|feature_set| PolicyFeatures::new::<S>(feature_set))
+                .map(|feature_set| PolicyFeatures::new(feature_set))
                 .collect();
 
             position.features_for_moves(&mut policy_feature_sets, &moves, &mut vec![], &group_data);
@@ -95,7 +95,7 @@ fn play_random_games_prop<const S: usize>(num_games: usize) {
             // If the decline_win value is set, check that there really is a winning move
             if policy_feature_sets
                 .iter()
-                .any(|features| features.decline_win[0] != 0.0)
+                .any(|features| *features.decline_win(0) != 0.0)
             {
                 assert!(
                     moves.iter().any(|mv| {
@@ -118,7 +118,7 @@ fn play_random_games_prop<const S: usize>(num_games: usize) {
                     policy_feature_sets
                         .iter()
                         .zip(moves)
-                        .filter(|(features, _)| features.decline_win[0] == 0.0)
+                        .filter(|(features, _)| *features.decline_win(0) == 0.0)
                         .map(|(_, mv)| mv.to_string::<S>())
                         .collect::<Vec<_>>()
                 )

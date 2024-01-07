@@ -31,17 +31,17 @@ pub struct TreeEdge {
 
 /// Temporary vectors that are continually re-used during search to avoid unnecessary allocations
 #[derive(Debug)]
-pub struct TempVectors {
+pub struct TempVectors<const S: usize> {
     simple_moves: Vec<Move>,
     moves: Vec<(Move, f32)>,
     fcd_per_move: Vec<i8>,
     value_scores: Vec<Score>,
     policy_score_sets: Vec<Box<[Score]>>,
-    policy_feature_sets: Option<Vec<PolicyFeatures<'static>>>,
+    policy_feature_sets: Option<Vec<PolicyFeatures<'static, S>>>,
 }
 
-impl TempVectors {
-    pub fn new<const S: usize>() -> Self {
+impl<const S: usize> TempVectors<S> {
+    pub fn new() -> Self {
         TempVectors {
             simple_moves: vec![],
             moves: vec![],
@@ -82,7 +82,7 @@ impl TreeEdge {
         &mut self,
         position: &mut Position<S>,
         settings: &MctsSetting<S>,
-        temp_vectors: &mut TempVectors,
+        temp_vectors: &mut TempVectors<S>,
         arena: &Arena,
     ) -> Option<Score> {
         if self.visits == 0 {
@@ -161,7 +161,7 @@ impl TreeEdge {
         &mut self,
         position: &mut Position<S>,
         settings: &MctsSetting<S>,
-        temp_vectors: &mut TempVectors,
+        temp_vectors: &mut TempVectors<S>,
         arena: &Arena,
     ) -> Option<Score> {
         debug_assert!(self.child.is_none());
@@ -195,7 +195,7 @@ impl Tree {
         position: &Position<S>,
         group_data: &GroupData<S>,
         settings: &MctsSetting<S>,
-        temp_vectors: &mut TempVectors,
+        temp_vectors: &mut TempVectors<S>,
         arena: &Arena,
     ) -> Option<()> {
         position.generate_moves_with_params(
@@ -264,7 +264,7 @@ pub fn rollout<const S: usize>(
     position: &mut Position<S>,
     settings: &MctsSetting<S>,
     depth: u16,
-    temp_vectors: &mut TempVectors,
+    temp_vectors: &mut TempVectors<S>,
 ) -> (Score, bool) {
     let group_data = position.group_data();
 

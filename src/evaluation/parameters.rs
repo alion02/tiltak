@@ -58,118 +58,141 @@ fn split_at_mut_thin(slice: &mut [f32], mid: usize) -> (ThinSlice, &mut [f32]) {
 }
 
 #[derive(Debug)]
-pub struct ValueFeatures<'a> {
-    pub first_ply: ThinSlice<'a>,
-    pub second_ply: ThinSlice<'a>,
-    pub flat_psqt: ThinSlice<'a>,
-    pub wall_psqt: ThinSlice<'a>,
-    pub cap_psqt: ThinSlice<'a>,
-    pub supports_psqt: ThinSlice<'a>,
-    pub captives_psqt: ThinSlice<'a>,
-    pub shallow_supports_per_piece: ThinSlice<'a>,
-    pub deep_supports_per_piece: ThinSlice<'a>,
-    pub shallow_captives_per_piece: ThinSlice<'a>,
-    pub deep_captives_per_piece: ThinSlice<'a>,
-    pub us_to_move_opening_flatstone_lead: ThinSlice<'a>,
-    pub them_to_move_opening_flatstone_lead: ThinSlice<'a>,
-    pub us_to_move_middlegame_flatstone_lead: ThinSlice<'a>,
-    pub them_to_move_middlegame_flatstone_lead: ThinSlice<'a>,
-    pub us_to_move_endgame_flatstone_lead: ThinSlice<'a>,
-    pub them_to_move_endgame_flatstone_lead: ThinSlice<'a>,
-    pub i_number_of_groups: ThinSlice<'a>,
-    pub critical_squares: ThinSlice<'a>,
-    pub flat_next_to_our_stack: ThinSlice<'a>,
-    pub wall_next_to_our_stack: ThinSlice<'a>,
-    pub cap_next_to_our_stack: ThinSlice<'a>,
-    pub num_lines_occupied: ThinSlice<'a>,
-    pub line_control_empty: ThinSlice<'a>,
-    pub line_control_their_blocking_piece: ThinSlice<'a>,
-    pub line_control_other: ThinSlice<'a>,
-    pub sidelined_cap: ThinSlice<'a>,
-    pub fully_isolated_cap: ThinSlice<'a>,
-    pub semi_isolated_cap: ThinSlice<'a>,
+pub struct ValueFeatures<'a, const S: usize> {
+    raw: ThinSlice<'a>,
 }
 
-impl<'a> ValueFeatures<'a> {
-    pub fn new<const S: usize>(coefficients: &'a mut [f32]) -> Self {
+impl<'a, const S: usize> ValueFeatures<'a, S> {
+    pub fn new(coefficients: &'a mut [f32]) -> Self {
         assert_eq!(coefficients.len(), num_value_features::<S>() / 2);
 
-        let (first_ply, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (second_ply, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (flat_psqt, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (wall_psqt, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (cap_psqt, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (supports_psqt, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (captives_psqt, coefficients) =
-            split_at_mut_thin(coefficients, num_square_symmetries::<S>());
-        let (shallow_supports_per_piece, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (deep_supports_per_piece, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (shallow_captives_per_piece, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (deep_captives_per_piece, coefficients) = split_at_mut_thin(coefficients, 4);
-        let (us_to_move_opening_flatstone_lead, coefficients) = split_at_mut_thin(coefficients, 7);
-        let (them_to_move_opening_flatstone_lead, coefficients) =
-            split_at_mut_thin(coefficients, 7);
-        let (us_to_move_middlegame_flatstone_lead, coefficients) =
-            split_at_mut_thin(coefficients, 7);
-        let (them_to_move_middlegame_flatstone_lead, coefficients) =
-            split_at_mut_thin(coefficients, 7);
-        let (us_to_move_endgame_flatstone_lead, coefficients) = split_at_mut_thin(coefficients, 7);
-        let (them_to_move_endgame_flatstone_lead, coefficients) =
-            split_at_mut_thin(coefficients, 7);
-        let (i_number_of_groups, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (critical_squares, coefficients) = split_at_mut_thin(coefficients, 6);
-        let (flat_next_to_our_stack, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (wall_next_to_our_stack, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (cap_next_to_our_stack, coefficients) = split_at_mut_thin(coefficients, 1);
-        let (num_lines_occupied, coefficients) = split_at_mut_thin(coefficients, S + 1);
-        let (line_control_empty, coefficients) =
-            split_at_mut_thin(coefficients, S * num_line_symmetries::<S>());
-        let (line_control_their_blocking_piece, coefficients) =
-            split_at_mut_thin(coefficients, S * num_line_symmetries::<S>());
-        let (line_control_other, coefficients) =
-            split_at_mut_thin(coefficients, S * num_line_symmetries::<S>());
-        let (sidelined_cap, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (fully_isolated_cap, coefficients) = split_at_mut_thin(coefficients, 3);
-        let (semi_isolated_cap, coefficients) = split_at_mut_thin(coefficients, 3);
-
-        assert!(coefficients.is_empty());
-
         ValueFeatures {
-            first_ply,
-            second_ply,
-            flat_psqt,
-            wall_psqt,
-            cap_psqt,
-            supports_psqt,
-            captives_psqt,
-            shallow_supports_per_piece,
-            deep_supports_per_piece,
-            shallow_captives_per_piece,
-            deep_captives_per_piece,
-            us_to_move_opening_flatstone_lead,
-            them_to_move_opening_flatstone_lead,
-            us_to_move_middlegame_flatstone_lead,
-            them_to_move_middlegame_flatstone_lead,
-            us_to_move_endgame_flatstone_lead,
-            them_to_move_endgame_flatstone_lead,
-            i_number_of_groups,
-            critical_squares,
-            flat_next_to_our_stack,
-            wall_next_to_our_stack,
-            cap_next_to_our_stack,
-            num_lines_occupied,
-            line_control_empty,
-            line_control_their_blocking_piece,
-            line_control_other,
-            sidelined_cap,
-            fully_isolated_cap,
-            semi_isolated_cap,
+            raw: ThinSlice {
+                ptr: coefficients.as_mut_ptr(),
+                phantom_data: PhantomData,
+            },
         }
+    }
+    #[inline]
+    pub fn first_ply(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[index]
+    }
+    #[inline]
+    pub fn second_ply(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[1 + index]
+    }
+    #[inline]
+    pub fn flat_psqt(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[1 + num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn wall_psqt(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[1 + 2 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn cap_psqt(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[1 + 3 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn supports_psqt(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[1 + 4 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn captives_psqt(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[1 + 5 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn shallow_supports_per_piece(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[1 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn deep_supports_per_piece(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[5 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn shallow_captives_per_piece(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[9 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn deep_captives_per_piece(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[13 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn us_to_move_opening_flatstone_lead(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[17 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn them_to_move_opening_flatstone_lead(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[24 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn us_to_move_middlegame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[31 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn them_to_move_middlegame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[38 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn us_to_move_endgame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[45 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn them_to_move_endgame_flatstone_lead(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[52 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn i_number_of_groups(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[59 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn critical_squares(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[62 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn flat_next_to_our_stack(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[68 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn wall_next_to_our_stack(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[69 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn cap_next_to_our_stack(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[70 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn num_lines_occupied(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[71 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn line_control_empty(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw[S + 72 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn line_control_their_blocking_piece(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw
+            [S * num_line_symmetries::<S>() + S + 72 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn line_control_other(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw
+            [2 * S * num_line_symmetries::<S>() + S + 72 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn sidelined_cap(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw
+            [3 * S * num_line_symmetries::<S>() + S + 72 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn fully_isolated_cap(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw
+            [3 * S * num_line_symmetries::<S>() + S + 75 + 6 * num_square_symmetries::<S>() + index]
+    }
+    #[inline]
+    pub fn semi_isolated_cap(&mut self, index: usize) -> &mut f32 {
+        &mut self.raw
+            [3 * S * num_line_symmetries::<S>() + S + 78 + 6 * num_square_symmetries::<S>() + index]
     }
 }
 

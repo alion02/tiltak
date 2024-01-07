@@ -376,10 +376,10 @@ fn print_value_features<const S: usize>(komi: Komi) {
     let num: usize = params.len() / 2;
     let (white_coefficients, black_coefficients) = params.split_at_mut(num);
 
-    let white_value_features = parameters::ValueFeatures::new::<S>(white_coefficients);
+    let white_value_features = parameters::ValueFeatures::<S>::new(white_coefficients);
     let white_value_features_string = format!("{:?}", white_value_features);
 
-    let black_value_features = parameters::ValueFeatures::new::<S>(black_coefficients);
+    let black_value_features = parameters::ValueFeatures::<S>::new(black_coefficients);
     let black_value_features_string = format!("{:?}", black_value_features);
 
     println!("White features:");
@@ -455,8 +455,8 @@ fn analyze_position<const S: usize>(position: &Position<S>) {
         coefficients.split_at_mut(coefficients_mid_index);
 
     {
-        let mut white_value_features = parameters::ValueFeatures::new::<S>(white_coefficients);
-        let mut black_value_features = parameters::ValueFeatures::new::<S>(black_coefficients);
+        let mut white_value_features = parameters::ValueFeatures::new(white_coefficients);
+        let mut black_value_features = parameters::ValueFeatures::new(black_coefficients);
         value_eval::static_eval_game_phase::<S>(
             position,
             &group_data,
@@ -486,13 +486,13 @@ fn analyze_position<const S: usize>(position: &Position<S>) {
         .map(|(white, black)| *white - *black)
         .collect();
 
-    let white_value_features = parameters::ValueFeatures::new::<S>(white_coefficients);
+    let white_value_features = parameters::ValueFeatures::<S>::new(white_coefficients);
     let white_value_features_string = format!("{:?}", white_value_features);
 
-    let black_value_features = parameters::ValueFeatures::new::<S>(black_coefficients);
+    let black_value_features = parameters::ValueFeatures::<S>::new(black_coefficients);
     let black_value_features_string = format!("{:?}", black_value_features);
 
-    let mixed_value_features = parameters::ValueFeatures::new::<S>(&mut mixed_coefficients);
+    let mixed_value_features = parameters::ValueFeatures::<S>::new(&mut mixed_coefficients);
     let mixed_value_features_string = format!("{:?}", mixed_value_features);
 
     println!("White features:");

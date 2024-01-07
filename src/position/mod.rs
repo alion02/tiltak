@@ -960,8 +960,8 @@ impl<const S: usize> Position<S> {
         features: &mut [f32],
     ) -> f32 {
         let (white_features, black_features) = features.split_at_mut(features.len() / 2);
-        let mut white_value_features = ValueFeatures::new::<S>(white_features);
-        let mut black_value_features = ValueFeatures::new::<S>(black_features);
+        let mut white_value_features = ValueFeatures::new(white_features);
+        let mut black_value_features = ValueFeatures::new(black_features);
         value_eval::static_eval_game_phase(
             self,
             group_data,
@@ -1041,8 +1041,8 @@ impl<const S: usize> Position<S> {
         let group_data = self.group_data();
 
         let (white_features, black_features) = features.split_at_mut(features.len() / 2);
-        let mut white_value_features = ValueFeatures::new::<S>(white_features);
-        let mut black_value_features = ValueFeatures::new::<S>(black_features);
+        let mut white_value_features = ValueFeatures::new(white_features);
+        let mut black_value_features = ValueFeatures::new(black_features);
 
         value_eval::static_eval_game_phase(
             self,

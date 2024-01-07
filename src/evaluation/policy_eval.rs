@@ -56,7 +56,7 @@ impl<const S: usize> Position<S> {
                 .collect();
 
             converted.extend(
-                feature_sets
+                feature_sets[..num_moves]
                     .iter_mut()
                     .map(|feature_set| PolicyFeatures::new::<S>(feature_set)),
             );

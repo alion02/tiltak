@@ -1,3 +1,6 @@
+use std::arch::x86_64::_mm256_cvtph_ps;
+use std::arch::x86_64::_mm256_storeu_ps;
+use std::arch::x86_64::_mm_loadu_si128;
 use std::array;
 use std::ops;
 use std::process;
@@ -226,7 +229,6 @@ pub struct TempVectors<const S: usize> {
     moves: Vec<(Move<S>, f16)>,
     fcd_per_move: Vec<i8>,
     policy_feature_sets: Vec<IncrementalPolicy<S>>,
-    unpacked_heuristic_scores: Vec<f32>,
 }
 
 impl<const S: usize> Default for TempVectors<S> {
@@ -236,7 +238,6 @@ impl<const S: usize> Default for TempVectors<S> {
             moves: vec![],
             fcd_per_move: vec![],
             policy_feature_sets: vec![],
-            unpacked_heuristic_scores: vec![0.; 65536],
         }
     }
 }
@@ -268,7 +269,6 @@ impl<const S: usize> TreeBridge<S> {
     pub fn best_child(
         &mut self,
         settings: &MctsSetting<S>,
-        temp_vectors: &mut TempVectors<S>,
         arena: &Arena,
         our_visits: u32,
     ) -> usize {
@@ -280,47 +280,48 @@ impl<const S: usize> TreeBridge<S> {
         let mean_action_values = arena.get_slice(&self.mean_action_values);
         let visitss = arena.get_slice(&self.visitss);
 
-        let unpacked_heuristic_scores =
-            &mut temp_vectors.unpacked_heuristic_scores[0..heuristic_scores.len()];
-        heuristic_scores.convert_to_f32_slice(unpacked_heuristic_scores);
-        let heuristic_scores = unpacked_heuristic_scores;
-
         assert_eq!(heuristic_scores.len() % SIMD_WIDTH, 0);
         assert_eq!(heuristic_scores.len(), mean_action_values.len());
         assert_eq!(heuristic_scores.len(), visitss.len());
 
-        for i in 0..heuristic_scores.len() {
-            let heuristic_score = &mut heuristic_scores[i];
-            let mean_action_value = &mean_action_values[i];
-            let child_visits = &visitss[i];
-
-            *heuristic_score = exploration_value(
-                *mean_action_value,
-                *heuristic_score,
-                *child_visits,
-                visits_sqrt,
-                dynamic_cpuct,
-            )
-        }
-
         let mut indices = [0u32; SIMD_WIDTH];
         let mut maxes = [f32::NEG_INFINITY; SIMD_WIDTH];
 
-        for (heuristic_scores, new_i) in heuristic_scores
-            .chunks_exact(SIMD_WIDTH)
-            .zip((0..).step_by(SIMD_WIDTH))
-        {
-            for i in 0..SIMD_WIDTH {
-                let score = heuristic_scores[i];
-                let max = &mut maxes[i];
-                let index = &mut indices[i];
+        unsafe {
+            for i in 0..heuristic_scores.len() / SIMD_WIDTH {
+                let l = (i * SIMD_WIDTH) as u32;
 
-                let i = *index;
-                let m = *max;
+                let mut unpacked = [0f32; SIMD_WIDTH];
+                // heuristic_scores.get_unchecked_mut(i * SIMD_WIDTH..i * SIMD_WIDTH + SIMD_WIDTH)
+                //     .convert_to_f32_slice(&mut unpacked);
+                let packed =
+                    _mm_loadu_si128(heuristic_scores.as_ptr().add(i * SIMD_WIDTH) as *const _);
+                let converted = _mm256_cvtph_ps(packed);
+                _mm256_storeu_ps(unpacked.as_mut_ptr(), converted);
 
-                let increased = score > m;
-                *index = if increased { new_i } else { i };
-                *max = if increased { score } else { m };
+                for j in 0..SIMD_WIDTH {
+                    let heuristic_score = *unpacked.get_unchecked_mut(j);
+                    let mean_action_value = *mean_action_values.get_unchecked(i * SIMD_WIDTH + j);
+                    let child_visits = *visitss.get_unchecked(i * SIMD_WIDTH + j);
+
+                    let score = exploration_value(
+                        mean_action_value,
+                        heuristic_score,
+                        child_visits,
+                        visits_sqrt,
+                        dynamic_cpuct,
+                    );
+
+                    let max = maxes.get_unchecked_mut(j);
+                    let index = indices.get_unchecked_mut(j);
+
+                    let k = *index;
+                    let m = *max;
+
+                    let increased = score > m;
+                    *index = if increased { l } else { k };
+                    *max = if increased { score } else { m };
+                }
             }
         }
 
@@ -350,7 +351,7 @@ impl<const S: usize> TreeBridge<S> {
             position
         );
 
-        let best_child_node_index = self.best_child(settings, temp_vectors, arena, our_visits);
+        let best_child_node_index = self.best_child(settings, arena, our_visits);
 
         let child_edge = arena
             .get_slice_mut(&mut self.children)

@@ -74,6 +74,7 @@ pub(crate) const fn num_square_symmetries<const S: usize>() -> usize {
         4 => 3,
         5 => 6,
         6 => 6,
+        7 => 10,
         _ => 0,
     }
 }
@@ -104,12 +105,14 @@ const fn generate_square_symmetries_table<const S: usize>() -> AbstractBoard<usi
 pub(crate) const SQUARE_SYMMETRIES_4S: AbstractBoard<usize, 4> = generate_square_symmetries_table();
 pub(crate) const SQUARE_SYMMETRIES_5S: AbstractBoard<usize, 5> = generate_square_symmetries_table();
 pub(crate) const SQUARE_SYMMETRIES_6S: AbstractBoard<usize, 6> = generate_square_symmetries_table();
+pub(crate) const SQUARE_SYMMETRIES_7S: AbstractBoard<usize, 7> = generate_square_symmetries_table();
 
 pub(crate) fn lookup_square_symmetries<const S: usize>(square: Square<S>) -> usize {
     match S {
         4 => SQUARE_SYMMETRIES_4S[square.downcast_size()],
         5 => SQUARE_SYMMETRIES_5S[square.downcast_size()],
         6 => SQUARE_SYMMETRIES_6S[square.downcast_size()],
+        7 => SQUARE_SYMMETRIES_7S[square.downcast_size()],
         _ => unimplemented!("Unsupported size {}", S),
     }
 }
@@ -119,6 +122,7 @@ pub(crate) const fn num_line_symmetries<const S: usize>() -> usize {
         4 => 2,
         5 => 3,
         6 => 3,
+        7 => 4,
         _ => 0,
     }
 }
@@ -128,6 +132,7 @@ pub(crate) const fn line_symmetries<const S: usize>() -> &'static [usize] {
         4 => &[0, 1, 1, 0],
         5 => &[0, 1, 2, 1, 0],
         6 => &[0, 1, 2, 2, 1, 0],
+        7 => &[0, 1, 2, 3, 2, 1, 0],
         _ => &[],
     }
 }

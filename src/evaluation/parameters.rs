@@ -18,11 +18,15 @@ pub const NUM_POLICY_FEATURES_5S: usize = 216;
 pub const NUM_VALUE_FEATURES_6S: usize = 560;
 pub const NUM_POLICY_FEATURES_6S: usize = 224;
 
+pub const NUM_VALUE_FEATURES_7S: usize = 752;
+pub const NUM_POLICY_FEATURES_7S: usize = 256;
+
 const fn value_padding<const S: usize>() -> usize {
     match S {
         4 => 14,
         5 => 10,
         6 => 14,
+        7 => 16,
         _ => unimplemented!(),
     }
 }
@@ -32,6 +36,7 @@ const fn policy_padding<const S: usize>() -> usize {
         4 => 3,
         5 => 7,
         6 => 5,
+        7 => 3,
         _ => unimplemented!(),
     }
 }
@@ -239,6 +244,7 @@ impl<const S: usize> ValueIndexes<S> {
 pub const VALUE_INDEXES_4S: ValueIndexes<4> = ValueIndexes::new();
 pub const VALUE_INDEXES_5S: ValueIndexes<5> = ValueIndexes::new();
 pub const VALUE_INDEXES_6S: ValueIndexes<6> = ValueIndexes::new();
+pub const VALUE_INDEXES_7S: ValueIndexes<7> = ValueIndexes::new();
 
 impl<const S: usize> ValueIndexes<S> {
     pub const fn downcast_size<const N: usize>(self) -> ValueIndexes<N> {
@@ -255,6 +261,7 @@ pub const fn value_indexes<const S: usize>() -> ValueIndexes<S> {
         4 => VALUE_INDEXES_4S.downcast_size(),
         5 => VALUE_INDEXES_5S.downcast_size(),
         6 => VALUE_INDEXES_6S.downcast_size(),
+        7 => VALUE_INDEXES_7S.downcast_size(),
         _ => panic!(),
     }
 }
@@ -327,6 +334,7 @@ pub struct PolicyIndexes<const S: usize> {
 pub const POLICY_INDEXES_4S: PolicyIndexes<4> = PolicyIndexes::new();
 pub const POLICY_INDEXES_5S: PolicyIndexes<5> = PolicyIndexes::new();
 pub const POLICY_INDEXES_6S: PolicyIndexes<6> = PolicyIndexes::new();
+pub const POLICY_INDEXES_7S: PolicyIndexes<7> = PolicyIndexes::new();
 
 impl<const S: usize> PolicyIndexes<S> {
     pub const fn downcast_size<const N: usize>(self) -> PolicyIndexes<N> {
@@ -343,6 +351,7 @@ pub const fn policy_indexes<const S: usize>() -> PolicyIndexes<S> {
         4 => POLICY_INDEXES_4S.downcast_size(),
         5 => POLICY_INDEXES_5S.downcast_size(),
         6 => POLICY_INDEXES_6S.downcast_size(),
+        7 => POLICY_INDEXES_7S.downcast_size(),
         _ => panic!(),
     }
 }
@@ -676,6 +685,7 @@ pub const fn num_value_features<const S: usize>() -> usize {
         4 => NUM_VALUE_FEATURES_4S,
         5 => NUM_VALUE_FEATURES_5S,
         6 => NUM_VALUE_FEATURES_6S,
+        7 => NUM_VALUE_FEATURES_7S,
         _ => unimplemented!(),
     }
 }
@@ -685,6 +695,7 @@ pub const fn num_policy_features<const S: usize>() -> usize {
         4 => NUM_POLICY_FEATURES_4S,
         5 => NUM_POLICY_FEATURES_5S,
         6 => NUM_POLICY_FEATURES_6S,
+        7 => NUM_POLICY_FEATURES_7S,
         _ => unimplemented!(),
     }
 }
@@ -736,6 +747,26 @@ pub fn policy_features_6s(komi: Komi) -> &'static [f32; NUM_POLICY_FEATURES_6S] 
         _ => unimplemented!("6s is not supported for 0 komi."),
     }
 }
+
+pub fn value_features_7s(komi: Komi) -> &'static [f32; NUM_VALUE_FEATURES_7S] {
+    match komi.half_komi() {
+        4 => &VALUE_PARAMS_7S_2KOMI,
+        _ => unimplemented!("7s is not supported for 0 komi."),
+    }
+}
+
+pub fn policy_features_7s(komi: Komi) -> &'static [f32; NUM_POLICY_FEATURES_7S] {
+    match komi.half_komi() {
+        4 => &POLICY_PARAMS_7S_2KOMI,
+        _ => unimplemented!("7s is not supported for 0 komi."),
+    }
+}
+
+#[allow(clippy::unreadable_literal)]
+pub const VALUE_PARAMS_7S_2KOMI: [f32; NUM_VALUE_FEATURES_7S] = [0.0; NUM_VALUE_FEATURES_7S];
+
+#[allow(clippy::unreadable_literal)]
+pub const POLICY_PARAMS_7S_2KOMI: [f32; NUM_POLICY_FEATURES_7S] = [0.0; NUM_POLICY_FEATURES_7S];
 
 #[allow(clippy::unreadable_literal)]
 pub const VALUE_PARAMS_4S_0KOMI: [f32; NUM_VALUE_FEATURES_4S] = [

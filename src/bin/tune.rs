@@ -4,8 +4,8 @@ use std::process::exit;
 use clap::{Arg, Command};
 
 use tiltak::evaluation::parameters::{
-    self, NUM_POLICY_FEATURES_4S, NUM_POLICY_FEATURES_5S, NUM_POLICY_FEATURES_6S,
-    NUM_VALUE_FEATURES_4S, NUM_VALUE_FEATURES_5S, NUM_VALUE_FEATURES_6S,
+    self, NUM_POLICY_FEATURES_4S, NUM_POLICY_FEATURES_5S, NUM_POLICY_FEATURES_6S, NUM_POLICY_FEATURES_7S,
+    NUM_VALUE_FEATURES_4S, NUM_VALUE_FEATURES_5S, NUM_VALUE_FEATURES_6S, NUM_VALUE_FEATURES_7S,
 };
 use tiltak::position::Komi;
 use tiltak::tune::training::TrainingOptions;
@@ -187,6 +187,20 @@ fn main() {
                             0,
                         )
                         .unwrap(),
+                        7 => training::train_perpetually::<
+                            7,
+                            NUM_VALUE_FEATURES_7S,
+                            NUM_POLICY_FEATURES_7S,
+                        >(
+                            options,
+                            *komi,
+                            *parameters::value_features_7s(*komi),
+                            *parameters::policy_features_7s(*komi),
+                            vec![],
+                            vec![],
+                            0,
+                        )
+                        .unwrap(),
                         _ => panic!("Size {} not supported.", size),
                     }
                     break;
@@ -226,6 +240,12 @@ fn main() {
                             NUM_POLICY_FEATURES_6S,
                         >(options, *komi)
                         .unwrap(),
+                        7 => training::train_from_scratch::<
+                            7,
+                            NUM_VALUE_FEATURES_7S,
+                            NUM_POLICY_FEATURES_7S,
+                        >(options, *komi)
+                        .unwrap(),
                         _ => panic!("Size {} not supported.", size),
                     }
                     break;
@@ -263,6 +283,12 @@ fn main() {
                     )
                     .unwrap()
                 }
+                7 => {
+                    training::continue_training::<7, NUM_VALUE_FEATURES_7S, NUM_POLICY_FEATURES_7S>(
+                        options, *komi,
+                    )
+                    .unwrap()
+                }
                 _ => panic!("Size {} not supported.", size),
             }
         }
@@ -285,6 +311,13 @@ fn main() {
                 }
                 6 => {
                     let value_params = training::tune_value_from_file::<6, NUM_VALUE_FEATURES_6S>(
+                        file_name, *komi,
+                    )
+                    .unwrap();
+                    println!("{:?}", value_params);
+                }
+                7 => {
+                    let value_params = training::tune_value_from_file::<7, NUM_VALUE_FEATURES_7S>(
                         file_name, *komi,
                     )
                     .unwrap();
@@ -330,6 +363,17 @@ fn main() {
                     println!("Value: {:?}", value_params);
                     println!("Policy: {:?}", policy_params);
                 }
+                7 => {
+                    let (value_params, policy_params) =
+                        training::tune_value_and_policy_from_file::<
+                            7,
+                            NUM_VALUE_FEATURES_7S,
+                            NUM_POLICY_FEATURES_7S,
+                        >(value_file_name, policy_file_name, *komi)
+                        .unwrap();
+                    println!("Value: {:?}", value_params);
+                    println!("Policy: {:?}", policy_params);
+                }
                 _ => panic!("Size {} not supported.", size),
             }
         }
@@ -363,6 +407,11 @@ fn main() {
                     *komi,
                 ),
                 6 => spsa::tune::<6>(
+                    &mut variables,
+                    arg.get_one::<String>("book").map(|s| s.as_ref()),
+                    *komi,
+                ),
+                7 => spsa::tune::<7>(
                     &mut variables,
                     arg.get_one::<String>("book").map(|s| s.as_ref()),
                     *komi,

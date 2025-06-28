@@ -82,7 +82,7 @@ pub fn main() {
                 position = None;
 
                 match size {
-                    Some(4) | Some(5) | Some(6) => (),
+                    Some(4) | Some(5) | Some(6) | Some(7) => (),
                     _ => panic!("Error: Unsupported size {}", size.unwrap_or_default()),
                 }
             }

@@ -92,6 +92,7 @@ pub fn main() {
                     Some(4) => Some(Box::new(parse_position_string::<4>(&line, komi))),
                     Some(5) => Some(Box::new(parse_position_string::<5>(&line, komi))),
                     Some(6) => Some(Box::new(parse_position_string::<6>(&line, komi))),
+                    Some(7) => Some(Box::new(parse_position_string::<7>(&line, komi))),
                     Some(s) => panic!("Unsupported size {}", s),
                 }
             }
@@ -138,6 +139,22 @@ pub fn main() {
                             .clone();
                         Some(thread::spawn(move || {
                             parse_go_string::<6>(
+                                &line,
+                                position,
+                                should_stop_clone,
+                                is_slatebot,
+                                is_cobblebot,
+                            )
+                        }))
+                    }
+                    Some(7) => {
+                        let position = position
+                            .as_ref()
+                            .and_then(|p| p.downcast_ref::<Position<7>>())
+                            .unwrap()
+                            .clone();
+                        Some(thread::spawn(move || {
+                            parse_go_string::<7>(
                                 &line,
                                 position,
                                 should_stop_clone,

@@ -22,7 +22,7 @@ fn main() {
                 .long("size")
                 .help("Board size")
                 .num_args(1)
-                .value_parser(clap::value_parser!(u64).range(4..=6)))
+                .value_parser(clap::value_parser!(u64).range(4..=7)))
         .arg(
             Arg::new("komi")
                 .global(true)

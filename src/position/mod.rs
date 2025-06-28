@@ -1187,6 +1187,7 @@ impl<const S: usize> Position<S> {
             4 => &parameters::VALUE_PARAMS_4S_2KOMI,
             5 => &parameters::VALUE_PARAMS_5S_2KOMI,
             6 => &parameters::VALUE_PARAMS_6S_2KOMI,
+            7 => &parameters::VALUE_PARAMS_7S_2KOMI,
             _ => unimplemented!("{}s is not supported for 2 komi.", S),
         }
     }
@@ -1205,6 +1206,7 @@ impl<const S: usize> Position<S> {
             4 => &parameters::POLICY_PARAMS_4S_2KOMI,
             5 => &parameters::POLICY_PARAMS_5S_2KOMI,
             6 => &parameters::POLICY_PARAMS_6S_2KOMI,
+            7 => &parameters::POLICY_PARAMS_7S_2KOMI,
             _ => unimplemented!("{}s is not supported for 2 komi.", S),
         }
     }

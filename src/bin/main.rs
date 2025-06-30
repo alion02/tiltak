@@ -193,6 +193,7 @@ fn main() {
                     "4" => value_params::<4>(komi),
                     "5" => value_params::<5>(komi),
                     "6" => value_params::<6>(komi),
+                    "7" => value_params::<7>(komi),
                     s => panic!("Unsupported size {}", s),
                 }
             }
@@ -206,6 +207,7 @@ fn main() {
                     "4" => value_features::<4>(Position::start_position_with_komi(komi)),
                     "5" => value_features::<5>(Position::start_position_with_komi(komi)),
                     "6" => value_features::<6>(Position::start_position_with_komi(komi)),
+                    "7" => value_features::<7>(Position::start_position_with_komi(komi)),
                     s => panic!("Unsupported size {}", s),
                 }
             }
@@ -219,6 +221,7 @@ fn main() {
                     "4" => policy_params::<4>(komi),
                     "5" => policy_params::<5>(komi),
                     "6" => policy_params::<6>(komi),
+                    "7" => policy_params::<7>(komi),
                     s => panic!("Unsupported size {}", s),
                 }
             }
@@ -235,6 +238,7 @@ fn value_features<const S: usize>(position: Position<S>) {
         4 => parameters::value_features_4s(position.komi()).as_slice(),
         5 => parameters::value_features_5s(position.komi()).as_slice(),
         6 => parameters::value_features_6s(position.komi()).as_slice(),
+        7 => parameters::value_features_7s(position.komi()).as_slice(),
         _ => panic!("Unsupported size {}", S),
     };
 
@@ -350,6 +354,7 @@ fn policy_params<const S: usize>(komi: Komi) {
         4 => parameters::policy_features_4s(komi).as_slice(),
         5 => parameters::policy_features_5s(komi).as_slice(),
         6 => parameters::policy_features_6s(komi).as_slice(),
+        7 => parameters::policy_features_7s(komi).as_slice(),
         _ => panic!("Unsupported size {}", S),
     };
 

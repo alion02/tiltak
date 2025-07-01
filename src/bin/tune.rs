@@ -282,7 +282,7 @@ fn main() {
             }
         }
         Some(("continue-selfplay", arg)) => {
-            let num_games_for_policy_tuning = matches
+            let num_games_for_policy_tuning = arg
                 .get_one::<u64>("policy-tuning-games")
                 .map(|&n| n as usize)
                 .unwrap();
